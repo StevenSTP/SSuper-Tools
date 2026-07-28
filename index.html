@@ -125,6 +125,20 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 .chat-send:hover{background:var(--primary-hover)}.chat-send:disabled{opacity:.5;cursor:not-allowed}
 .chat-day-divider{text-align:center;font-size:11px;color:var(--text-muted);font-weight:600;margin:4px 0}
 .chat-empty-msg{text-align:center;color:var(--text-muted);font-size:13px;padding:30px 16px;line-height:1.6}
+.chat-view{display:flex;flex-direction:column;height:100%}
+.chat-back{background:none;border:none;cursor:pointer;color:var(--text-main);font-size:22px;line-height:1;padding:2px 6px 2px 0;font-weight:700}
+.chat-search-row{padding:10px 12px;border-bottom:1px solid var(--border-soft);flex-shrink:0}
+.chat-search{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-main);font:inherit;font-size:13px;outline:none}
+.chat-search:focus{border-color:var(--primary)}
+.chat-userlist{flex:1;overflow-y:auto;padding:8px;scrollbar-width:thin}
+.chat-user{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:12px;cursor:pointer;transition:.15s;position:relative}
+.chat-user:hover{background:var(--card-2)}
+.chat-user-avatar{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#04130C;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0}
+.chat-user-info{flex:1;min-width:0}
+.chat-user-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-user-email{font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-user-badge{min-width:19px;height:19px;padding:0 5px;background:var(--danger);color:#fff;border-radius:10px;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;flex-shrink:0}
+.chat-user-badge.show{display:flex}
 /* ===== PDF thumb size fix ===== */
 .pdf-mergefile .mf-thumbs canvas{max-height:90px;object-fit:cover}
 .pdf-thumb canvas{max-height:160px}
@@ -205,16 +219,30 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
   💬<span class="chat-badge" id="chatBadge">0</span>
 </button>
 <div class="chat-panel" id="chatPanel">
-  <div class="chat-header">
-    <div><h3>💬 Team Chat</h3><div class="chat-online" id="chatOnline">● Online</div></div>
-    <div class="chat-header-right">
+  <!-- VIEW 1: USER LIST -->
+  <div class="chat-view" id="chatViewList">
+    <div class="chat-header">
+      <div><h3>💬 Pesan</h3><div class="chat-online">Pilih user untuk chat</div></div>
       <button class="chat-close" onclick="toggleChat()" title="Tutup">✕</button>
     </div>
+    <div class="chat-search-row">
+      <input type="text" class="chat-search" id="chatSearch" placeholder="🔍 Cari user..." oninput="chatFilterUsers(this.value)">
+    </div>
+    <div class="chat-userlist" id="chatUserList"><div class="chat-empty-msg">Memuat daftar user...</div></div>
   </div>
-  <div class="chat-msgs" id="chatMsgs"><div class="chat-empty-msg">Memuat pesan...</div></div>
-  <div class="chat-input-row">
-    <textarea class="chat-input" id="chatInput" placeholder="Tulis pesan..." rows="1" onkeydown="chatKeydown(event)" oninput="chatAutoResize(this)"></textarea>
-    <button class="chat-send" id="chatSendBtn" onclick="chatSend()" title="Kirim">➤</button>
+
+  <!-- VIEW 2: CONVERSATION -->
+  <div class="chat-view" id="chatViewConvo" style="display:none;">
+    <div class="chat-header">
+      <button class="chat-back" onclick="chatBackToList()" title="Kembali">←</button>
+      <div style="flex:1;min-width:0;"><h3 id="chatPeerName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">User</h3><div class="chat-online" id="chatPeerEmail" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div></div>
+      <button class="chat-close" onclick="toggleChat()" title="Tutup">✕</button>
+    </div>
+    <div class="chat-msgs" id="chatMsgs"><div class="chat-empty-msg">Memuat pesan...</div></div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chatInput" placeholder="Tulis pesan..." rows="1" onkeydown="chatKeydown(event)" oninput="chatAutoResize(this)"></textarea>
+      <button class="chat-send" id="chatSendBtn" onclick="chatSend()" title="Kirim">➤</button>
+    </div>
   </div>
 </div>
 <!-- LOAN CALCULATOR -->
@@ -1099,65 +1127,206 @@ function finExportSummary() {
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(Object.entries(expMap).map(([k,v])=>({Kategori:k,Jumlah:v}))),'Pengeluaran');
   XLSX.writeFile(wb,`FinTracker_Summary_${Date.now()}.xlsx`);
 }
-/* ===== TEAM CHAT (Supabase Realtime) ===== */
-// ⚠️ Jalankan SQL ini di Supabase sekali:
-// create table chat_messages (id bigint generated always as identity primary key, user_id uuid references auth.users(id) on delete cascade not null, user_name text not null, message text not null, created_at timestamptz default now());
-// alter table chat_messages enable row level security;
-// create policy "read_chat" on chat_messages for select using (auth.role()='authenticated');
-// create policy "send_chat" on chat_messages for insert with check (auth.uid()=user_id);
-// create policy "delete_own" on chat_messages for delete using (auth.uid()=user_id);
+/* ===== PRIVATE 1-ON-1 CHAT (Supabase Realtime) ===== */
+/* ⚠️ Jalankan SQL ini di Supabase SQL Editor sekali:
 
-let chatOpen=false, chatUserId=null, chatUserName='', chatMessages=[], chatUnread=0, chatSub=null;
+-- 1. Tabel profiles (semua user terdaftar)
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  email text,
+  updated_at timestamptz default now()
+);
+alter table profiles enable row level security;
+create policy "read_all_profiles" on profiles for select using (auth.role()='authenticated');
+create policy "upsert_own_profile" on profiles for insert with check (auth.uid()=id);
+create policy "update_own_profile" on profiles for update using (auth.uid()=id);
+
+-- 2. Tabel direct messages
+create table direct_messages (
+  id bigint generated always as identity primary key,
+  sender_id uuid references auth.users(id) on delete cascade not null,
+  receiver_id uuid references auth.users(id) on delete cascade not null,
+  sender_name text not null,
+  message text not null,
+  is_read boolean default false,
+  created_at timestamptz default now()
+);
+alter table direct_messages enable row level security;
+create policy "read_own_dm" on direct_messages for select using (auth.uid()=sender_id or auth.uid()=receiver_id);
+create policy "send_dm" on direct_messages for insert with check (auth.uid()=sender_id);
+create policy "update_read" on direct_messages for update using (auth.uid()=receiver_id);
+
+-- 3. Aktifkan Realtime: Supabase Dashboard > Database > Replication > centang direct_messages
+*/
+
+let chatOpen=false, chatMyId=null, chatMyName='', chatPeerId=null, chatPeerName='';
+let chatUsers=[], chatMessages=[], chatUnreadByUser={}, chatSub=null, chatInited=false;
 
 async function chatInit(userId, name){
-  chatUserId=userId; chatUserName=name;
-  // Load last 60 messages
-  const {data}=await sb.from('chat_messages').select('*').order('created_at',{ascending:true}).limit(60);
-  if(data){chatMessages=data;chatRenderMsgs();}
-  // Subscribe to realtime inserts
-  chatSub=sb.channel('public_chat')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
-      chatMessages.push(payload.new);
-      chatRenderMsgs();
-      if(!chatOpen){chatUnread++;chatUpdateBadge();}
-    }).subscribe();
-  document.getElementById('chatOnline').textContent='● Online';
+  if(chatInited) return;
+  chatInited=true;
+  chatMyId=userId; chatMyName=name;
+
+  // 1. Upsert own profile so others can find me
+  const {data:{session}}=await sb.auth.getSession();
+  const email=session?.user?.email||'';
+  try{
+    await sb.from('profiles').upsert(
+      {id:userId,full_name:name,email:email,updated_at:new Date().toISOString()},
+      {onConflict:'id'}
+    );
+  }catch(e){console.error('profile upsert:',e);}
+
+  // 2. Load all users
+  await chatLoadUsers();
+
+  // 3. Load unread counts
+  await chatLoadUnread();
+
+  // 4. Subscribe to incoming DMs (realtime)
+  chatSub=sb.channel('dm_channel')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages',filter:'receiver_id=eq.'+userId},payload=>{
+      const m=payload.new;
+      // If currently chatting with sender, append + mark read
+      if(chatPeerId && m.sender_id===chatPeerId){
+        chatMessages.push(m);
+        chatRenderMsgs();
+        chatMarkRead(chatPeerId);
+      }else{
+        // increment unread for that sender
+        chatUnreadByUser[m.sender_id]=(chatUnreadByUser[m.sender_id]||0)+1;
+        chatUpdateTotalBadge();
+        chatRenderUsers();
+      }
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages',filter:'sender_id=eq.'+userId},payload=>{
+      // My own message sent from another device — reflect it
+      const m=payload.new;
+      if(chatPeerId && m.receiver_id===chatPeerId){
+        // avoid duplicate (already added optimistically)
+        if(!chatMessages.some(x=>x.id===m.id)){chatMessages.push(m);chatRenderMsgs();}
+      }
+    })
+    .subscribe();
+}
+
+async function chatLoadUsers(){
+  try{
+    const {data,error}=await sb.from('profiles').select('*').neq('id',chatMyId).order('full_name');
+    if(error)throw error;
+    chatUsers=data||[];
+    chatRenderUsers();
+  }catch(e){
+    console.error('load users:',e);
+    document.getElementById('chatUserList').innerHTML='<div class="chat-empty-msg">Gagal memuat user. Pastikan tabel profiles sudah dibuat di Supabase.</div>';
+  }
+}
+
+async function chatLoadUnread(){
+  try{
+    const {data}=await sb.from('direct_messages').select('sender_id').eq('receiver_id',chatMyId).eq('is_read',false);
+    chatUnreadByUser={};
+    (data||[]).forEach(m=>{chatUnreadByUser[m.sender_id]=(chatUnreadByUser[m.sender_id]||0)+1;});
+    chatUpdateTotalBadge();
+    chatRenderUsers();
+  }catch(e){console.error('load unread:',e);}
+}
+
+function chatRenderUsers(filter=''){
+  const el=document.getElementById('chatUserList');if(!el)return;
+  let users=chatUsers;
+  if(filter){const f=filter.toLowerCase();users=users.filter(u=>(u.full_name||'').toLowerCase().includes(f)||(u.email||'').toLowerCase().includes(f));}
+  if(!users.length){el.innerHTML='<div class="chat-empty-msg">'+(chatUsers.length?'User tidak ditemukan.':'Belum ada user lain terdaftar.')+'</div>';return;}
+  el.innerHTML=users.map(u=>{
+    const initial=(u.full_name||u.email||'?').charAt(0).toUpperCase();
+    const unread=chatUnreadByUser[u.id]||0;
+    const safeName=chatEsc(u.full_name||'Tanpa Nama');
+    const safeEmail=chatEsc(u.email||'');
+    return `<div class="chat-user" onclick="chatOpenConvo('${u.id}','${safeName.replace(/'/g,"")}','${safeEmail.replace(/'/g,"")}')">
+      <div class="chat-user-avatar">${initial}</div>
+      <div class="chat-user-info"><div class="chat-user-name">${safeName}</div><div class="chat-user-email">${safeEmail}</div></div>
+      <div class="chat-user-badge ${unread>0?'show':''}">${unread>9?'9+':unread}</div>
+    </div>`;
+  }).join('');
+}
+
+function chatFilterUsers(v){chatRenderUsers(v);}
+
+function chatUpdateTotalBadge(){
+  const total=Object.values(chatUnreadByUser).reduce((a,b)=>a+b,0);
+  const b=document.getElementById('chatBadge');
+  if(!b)return;
+  if(total>0){b.classList.add('show');b.textContent=total>9?'9+':total;}
+  else b.classList.remove('show');
+}
+
+async function chatOpenConvo(peerId,peerName,peerEmail){
+  chatPeerId=peerId; chatPeerName=peerName;
+  document.getElementById('chatPeerName').textContent=peerName;
+  document.getElementById('chatPeerEmail').textContent=peerEmail;
+  document.getElementById('chatViewList').style.display='none';
+  document.getElementById('chatViewConvo').style.display='flex';
+  document.getElementById('chatMsgs').innerHTML='<div class="chat-empty-msg">Memuat pesan...</div>';
+  // Load conversation between me and peer
+  try{
+    const {data,error}=await sb.from('direct_messages').select('*')
+      .or(`and(sender_id.eq.${chatMyId},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${chatMyId})`)
+      .order('created_at',{ascending:true}).limit(200);
+    if(error)throw error;
+    chatMessages=data||[];
+    chatRenderMsgs();
+    chatMarkRead(peerId);
+  }catch(e){
+    console.error('load convo:',e);
+    document.getElementById('chatMsgs').innerHTML='<div class="chat-empty-msg">Gagal memuat pesan.</div>';
+  }
+  setTimeout(()=>document.getElementById('chatInput')?.focus(),100);
+}
+
+async function chatMarkRead(peerId){
+  // Clear unread badge locally
+  if(chatUnreadByUser[peerId]){delete chatUnreadByUser[peerId];chatUpdateTotalBadge();chatRenderUsers();}
+  try{
+    await sb.from('direct_messages').update({is_read:true})
+      .eq('receiver_id',chatMyId).eq('sender_id',peerId).eq('is_read',false);
+  }catch(e){console.error('mark read:',e);}
+}
+
+function chatBackToList(){
+  chatPeerId=null;chatPeerName='';
+  document.getElementById('chatViewConvo').style.display='none';
+  document.getElementById('chatViewList').style.display='flex';
+  chatLoadUnread();
 }
 
 function toggleChat(){
   chatOpen=!chatOpen;
-  const panel=document.getElementById('chatPanel');
-  panel.classList.toggle('open',chatOpen);
+  document.getElementById('chatPanel').classList.toggle('open',chatOpen);
   if(chatOpen){
-    chatUnread=0;chatUpdateBadge();
-    setTimeout(()=>{chatScrollBottom();document.getElementById('chatInput')?.focus();},200);
+    // Always start on user list
+    if(!chatPeerId) chatBackToListSilent();
+    chatLoadUsers();chatLoadUnread();
   }
 }
-
-function chatUpdateBadge(){
-  const b=document.getElementById('chatBadge');
-  if(!b)return;
-  if(chatUnread>0){b.classList.add('show');b.textContent=chatUnread>9?'9+':chatUnread;}
-  else{b.classList.remove('show');}
+function chatBackToListSilent(){
+  document.getElementById('chatViewConvo').style.display='none';
+  document.getElementById('chatViewList').style.display='flex';
 }
+
+function chatEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function chatRenderMsgs(){
   const el=document.getElementById('chatMsgs');if(!el)return;
-  if(!chatMessages.length){el.innerHTML='<div class="chat-empty-msg">Belum ada pesan. Mulai chat dengan tim!</div>';return;}
+  if(!chatMessages.length){el.innerHTML='<div class="chat-empty-msg">Belum ada pesan.<br>Sapa '+chatEsc(chatPeerName)+' 👋</div>';return;}
   let html='',lastDate='';
   chatMessages.forEach(m=>{
-    const isMine=m.user_id===chatUserId;
+    const isMine=m.sender_id===chatMyId;
     const dt=new Date(m.created_at);
     const dateStr=dt.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'});
     const timeStr=dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
     if(dateStr!==lastDate){html+=`<div class="chat-day-divider">${dateStr}</div>`;lastDate=dateStr;}
-    const escaped=String(m.message||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const safeName=String(m.user_name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    html+=`<div class="chat-msg ${isMine?'mine':'theirs'}">
-      ${!isMine?`<div class="chat-sender">${safeName}</div>`:''}
-      <div class="chat-bubble">${escaped}</div>
-      <div class="chat-meta">${timeStr}</div>
-    </div>`;
+    html+=`<div class="chat-msg ${isMine?'mine':'theirs'}"><div class="chat-bubble">${chatEsc(m.message)}</div><div class="chat-meta">${timeStr}</div></div>`;
   });
   el.innerHTML=html;
   chatScrollBottom();
@@ -1167,32 +1336,37 @@ function chatScrollBottom(){const el=document.getElementById('chatMsgs');if(el)e
 
 async function chatSend(){
   const input=document.getElementById('chatInput');
-  if(!input)return;
+  if(!input||!chatPeerId)return;
   const msg=input.value.trim();
-  if(!msg||!chatUserId)return;
+  if(!msg)return;
   const btn=document.getElementById('chatSendBtn');
   input.value='';input.style.height='42px';
   if(btn)btn.disabled=true;
+  // Optimistic UI: show immediately
+  const optimistic={id:'tmp_'+Date.now(),sender_id:chatMyId,receiver_id:chatPeerId,sender_name:chatMyName,message:msg,created_at:new Date().toISOString()};
+  chatMessages.push(optimistic);chatRenderMsgs();
   try{
-    await sb.from('chat_messages').insert({user_id:chatUserId,user_name:chatUserName,message:msg});
+    const {data,error}=await sb.from('direct_messages').insert(
+      {sender_id:chatMyId,receiver_id:chatPeerId,sender_name:chatMyName,message:msg}
+    ).select().single();
+    if(error)throw error;
+    // Replace optimistic with real record
+    const idx=chatMessages.findIndex(x=>x.id===optimistic.id);
+    if(idx>=0 && data){chatMessages[idx]=data;chatRenderMsgs();}
   }catch(e){
-    console.error('Chat error:',e);
-    alert('Gagal mengirim pesan.');
-    input.value=msg; // restore on fail
+    console.error('send dm:',e);
+    // Remove optimistic on failure
+    chatMessages=chatMessages.filter(x=>x.id!==optimistic.id);
+    chatRenderMsgs();
+    alert('Gagal mengirim pesan. Pastikan tabel direct_messages sudah dibuat.');
+    input.value=msg;
   }
   if(btn)btn.disabled=false;
   input.focus();
 }
 
-function chatKeydown(e){
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}
-}
-
-function chatAutoResize(el){
-  el.style.height='42px';
-  const h=Math.min(el.scrollHeight,100);
-  el.style.height=h+'px';
-}
+function chatKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}}
+function chatAutoResize(el){el.style.height='42px';el.style.height=Math.min(el.scrollHeight,100)+'px';}
 
 </script>
 </body>
