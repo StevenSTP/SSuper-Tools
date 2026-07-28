@@ -79,6 +79,15 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 .mobile-toggle{display:none;position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:12px;background:var(--card-bg);border:1px solid var(--border);color:var(--text-main);font-size:20px;cursor:pointer;align-items:center;justify-content:center}
 @media(max-width:860px){.mobile-toggle{display:flex}.sidebar{position:fixed;left:-280px;z-index:999;box-shadow:4px 0 20px rgba(0,0,0,.3)}.sidebar.open{left:0}.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:998}.sidebar-overlay.show{display:block}.main-content{padding:60px 16px 60px}.kur-formgrid,.kur-smallgrid{grid-template-columns:1fr}.kur-summarygrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.kur-summarygrid{grid-template-columns:1fr}}
+.pdf-thumb{position:relative;border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;background:var(--card-2);transition:.15s}
+.pdf-thumb canvas{width:100%;display:block}
+.pdf-thumb .pnum{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:11px;text-align:center;padding:3px;font-weight:700}
+.pdf-thumb.selected{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.pdf-thumb.selected::after{content:'✓';position:absolute;top:6px;right:6px;width:22px;height:22px;background:var(--primary);color:#04130C;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.pdf-mergefile{border:1px solid var(--border-soft);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--card-2)}
+.pdf-mergefile .mf-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:8px}
+.pdf-mergefile .mf-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+.pdf-mergefile .mf-thumbs canvas{width:100%;border:1px solid var(--border);border-radius:4px}
 </style>
 </head>
 <body>
@@ -86,24 +95,9 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 <div id="authScreen">
 <div class="auth-card">
 <div class="logo"><h1><span class="dot">⚡</span> Super Tools <span class="pro">PRO</span></h1><p style="color:var(--text-muted);font-size:13px;margin-top:8px;">Portal tools untuk pekerja profesional</p></div>
-<div class="auth-tabs"><div class="auth-tab active" onclick="switchAuthTab('login')">Masuk</div><div class="auth-tab" onclick="switchAuthTab('register')">Daftar</div></div>
-<div id="loginForm" class="auth-form active">
-<div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="nama@email.com"></div>
-<div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="Masukkan password"></div>
-<button class="btn" style="width:100%;margin-top:4px;" onclick="doLogin()">Masuk</button>
-<div class="auth-divider">atau</div>
-<button class="btn-google" onclick="doGoogleLogin()"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Masuk dengan Google</button>
-<p class="auth-footer">Belum punya akun? <a onclick="switchAuthTab('register')">Daftar</a></p>
-</div>
-<div id="registerForm" class="auth-form">
-<div class="form-group"><label>Nama Lengkap</label><input type="text" id="regName" placeholder="Nama lengkap"></div>
-<div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="nama@email.com"></div>
-<div class="form-group"><label>Password</label><input type="password" id="regPass" placeholder="Buat password (min 6 karakter)"></div>
-<button class="btn" style="width:100%;margin-top:4px;" onclick="doRegister()">Buat Akun</button>
-<div class="auth-divider">atau</div>
-<button class="btn-google" onclick="doGoogleLogin()"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Daftar dengan Google</button>
-<p class="auth-footer">Sudah punya akun? <a onclick="switchAuthTab('login')">Masuk</a></p>
-</div>
+<p style="text-align:center;color:var(--text-muted);font-size:14px;margin:24px 0 20px;line-height:1.6;">Masuk atau daftar dengan akun Google Anda untuk mengakses semua tools.</p>
+<button class="btn-google" onclick="doGoogleLogin()"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Lanjutkan dengan Google</button>
+<p style="text-align:center;color:var(--text-muted);font-size:11px;margin-top:20px;line-height:1.5;">Dengan masuk, Anda menyetujui penggunaan tools ini untuk keperluan kerja.</p>
 </div>
 </div>
 
@@ -123,11 +117,11 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 <div class="sidebar-item" onclick="goPage('compound-interest',this)"><span class="icon">📈</span> Compound Interest</div>
 <div class="sidebar-section">Utilitas</div>
 <div class="sidebar-item" onclick="goPage('percentage-calc',this)"><span class="icon">🔢</span> Percentage Calc</div>
-<div class="sidebar-item" onclick="goPage('terbilang',this)"><span class="icon">🔤</span> Terbilang</div>
 <div class="sidebar-item" onclick="goPage('date-calc',this)"><span class="icon">📅</span> Tanggal & Denda</div>
 <div class="sidebar-item" onclick="goPage('smart-ocr',this)"><span class="icon">👁️</span> Smart OCR</div>
 <div class="sidebar-item" onclick="goPage('voice-ai',this)"><span class="icon">🎙️</span> Voice AI</div>
 <div class="sidebar-item" onclick="goPage('pdf-tools',this)"><span class="icon">📄</span> PDF Tools</div>
+<div class="sidebar-item" onclick="goPage('pdf-to-word',this)"><span class="icon">📝</span> PDF ke Word</div>
 <div class="sidebar-item" onclick="goPage('qr-code',this)"><span class="icon">🔳</span> QR Code</div>
 <div class="sidebar-item" onclick="goPage('password',this)"><span class="icon">🔑</span> Password</div>
 <div class="sidebar-bottom">
@@ -241,12 +235,6 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 <div class="pct-section"><h3>Tambah / Kurang %</h3><div class="pct-inline"><input type="text" id="pct4a" value="1.000.000" oninput="formatInputUang(this)"><select id="pct4op" style="max-width:60px;"><option value="add">+</option><option value="sub">−</option></select><input type="number" id="pct4b" value="10" step="any" style="max-width:100px;"><span>%</span><button class="btn small-btn" onclick="calcPct4()">Hitung</button></div><div class="pct-result num" id="pctRes4"></div></div>
 <div class="pct-section"><h3>Margin / Markup</h3><div class="pct-inline"><span>Beli</span><input type="text" id="pct5a" value="80.000" oninput="formatInputUang(this)"><span>Jual</span><input type="text" id="pct5b" value="120.000" oninput="formatInputUang(this)"><button class="btn small-btn" onclick="calcPct5()">Hitung</button></div><div class="pct-result num" id="pctRes5"></div></div></div></div>
 
-<!-- TERBILANG -->
-<div id="terbilang" class="page"><div class="card"><h2>Terbilang (Angka ke Huruf)</h2><p class="card-hint">Konversi nominal menjadi teks untuk akad, SPK, kwitansi.</p>
-<div class="form-group" style="max-width:480px;"><label>Masukkan Angka (Rp)</label><input type="text" id="tbInput" value="500.000.000" oninput="formatInputUang(this);runTerbilang();"></div>
-<div style="display:flex;flex-direction:column;gap:14px;margin-top:8px;"><div class="softbox"><label>Format Kapital</label><p id="tbTitle" style="font-size:18px;font-weight:600;margin:10px 0 0;line-height:1.5;">—</p></div><div class="softbox"><label>Format Huruf Kecil</label><p id="tbLower" style="font-size:16px;margin:10px 0 0;line-height:1.5;">—</p></div></div>
-<div class="tools-bar" style="margin-top:16px;"><button class="btn btn-outline small-btn" onclick="copyEl('tbTitle')">📋 Kapital</button><button class="btn btn-outline small-btn" onclick="copyEl('tbLower')">📋 Huruf Kecil</button></div></div></div>
-
 <!-- DATE & PENALTY -->
 <div id="date-calc" class="page"><div class="grid">
 <div class="card"><h3>Selisih & Jatuh Tempo</h3><div class="form-group"><label>Tanggal Mulai</label><input type="date" id="dStart"></div><div class="form-group"><label>Tanggal Akhir</label><input type="date" id="dEnd"></div><button class="btn btn-outline" style="width:100%;" onclick="hitungSelisih()">Hitung Selisih</button><div id="diffResult" class="softbox" style="display:none;margin-top:16px;"></div><hr class="divider"><h3>Tambah Hari/Bulan</h3><div class="form-group"><label>Dari Tanggal</label><input type="date" id="dBase"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;"><div class="form-group"><label>+ Bulan</label><input type="number" id="dAddMonth" value="0"></div><div class="form-group"><label>+ Hari</label><input type="number" id="dAddDay" value="30"></div></div><button class="btn btn-outline" style="width:100%;" onclick="hitungJatuhTempo()">Hitung JT</button><div id="dueResult" class="softbox" style="display:none;margin-top:16px;text-align:center;"></div></div>
@@ -260,14 +248,46 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 <div class="card" style="display:flex;flex-direction:column;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;"><h3 style="margin:0;">Hasil</h3><div class="tools-bar"><button class="btn btn-outline small-btn" onclick="copyText('ocrResult')">📋</button><button class="btn btn-outline small-btn" onclick="downloadText('ocrResult','OCR')">⬇️</button></div></div><textarea id="ocrResult" style="flex-grow:1;min-height:300px;resize:vertical;" placeholder="Teks hasil scan..."></textarea></div></div></div>
 
 <!-- VOICE AI -->
-<div id="voice-ai" class="page"><div class="card voice-container"><h2>AI Speech to Text</h2><p class="card-hint" style="margin-bottom:30px;">Ubah suara ke teks real-time.</p><div class="status-badge" id="voiceStatus">Standby</div>
+<div id="voice-ai" class="page"><div class="card voice-container"><h2>AI Speech to Text</h2><p class="card-hint" style="margin-bottom:24px;">Rekam suara real-time atau upload file voice note.</p><div class="status-badge" id="voiceStatus">Standby</div>
 <button class="mic-btn" id="btnMic" onclick="toggleMic()"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg></button>
-<canvas id="visualizer"></canvas><div class="form-group" style="max-width:220px;margin:20px auto;"><select id="voiceLang"><option value="id-ID">Indonesia</option><option value="en-US">English</option></select></div></div>
-<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;"><h3 style="margin:0;">Transcript</h3><div class="tools-bar"><button class="btn btn-outline small-btn" onclick="clearText('voiceResult')">🗑️</button><button class="btn btn-outline small-btn" onclick="copyText('voiceResult')">📋</button><button class="btn btn-outline small-btn" onclick="downloadText('voiceResult','Transcript')">⬇️</button></div></div><textarea id="voiceResult" style="width:100%;min-height:200px;resize:vertical;" placeholder="Mulai bicara..."></textarea></div></div>
+<canvas id="visualizer"></canvas>
+<div class="dashbox" style="margin-top:24px;text-align:left;"><label style="color:var(--primary);">📁 Upload Voice Note (transkrip file audio)</label><p class="card-hint" style="margin:4px 0 12px;">Format: MP3, WAV, M4A, OGG. Bahasa terdeteksi otomatis.</p><input type="file" id="voiceFileInput" accept="audio/*" onchange="handleVoiceFile(this.files[0])"><audio id="voiceAudioPreview" controls style="width:100%;margin-top:12px;display:none;"></audio><button class="btn" id="btnTranscribeFile" style="width:100%;margin-top:12px;" disabled onclick="transcribeVoiceFile()">Transkrip File</button><p id="voiceFileStatus" class="card-hint" style="text-align:center;margin-top:10px;"></p></div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;"><h3 style="margin:0;">Transcript</h3><div class="tools-bar"><button class="btn btn-outline small-btn" onclick="clearText('voiceResult')">🗑️</button><button class="btn btn-outline small-btn" onclick="copyText('voiceResult')">📋</button><button class="btn btn-outline small-btn" onclick="downloadText('voiceResult','Transcript')">⬇️</button></div></div><textarea id="voiceResult" style="width:100%;min-height:200px;resize:vertical;" placeholder="Hasil transkrip muncul di sini..."></textarea></div></div>
 
 <!-- PDF TOOLS -->
-<div id="pdf-tools" class="page"><div class="grid"><div class="card"><h3>Gabung PDF</h3><p class="card-hint">Pilih beberapa PDF.</p><input type="file" id="mergeInput" accept="application/pdf" multiple onchange="showMergeFiles()"><div id="mergeList" class="file-name"></div><button class="btn" id="btnMerge" style="width:100%;margin-top:16px;" disabled onclick="mergePDF()">Gabung & Unduh</button><p id="mergeStatus" class="card-hint" style="text-align:center;margin-top:10px;"></p></div>
-<div class="card"><h3>Pisah PDF</h3><p class="card-hint">Contoh: <strong>1-3,5,8</strong></p><input type="file" id="splitInput" accept="application/pdf" onchange="showSplitFile()"><div id="splitName" class="file-name"></div><div class="form-group" style="margin-top:14px;"><label>Halaman</label><input type="text" id="splitRange" placeholder="1-3,5"></div><button class="btn" id="btnSplit" style="width:100%;" disabled onclick="splitPDF()">Ekstrak & Unduh</button><p id="splitStatus" class="card-hint" style="text-align:center;margin-top:10px;"></p></div></div></div>
+<div id="pdf-tools" class="page">
+<div class="card"><h2>PDF Tools</h2><p class="card-hint">Gabung beberapa PDF atau pilih halaman tertentu. Klik thumbnail halaman untuk memilih.</p>
+<div class="tools-bar" style="margin-bottom:16px;"><button class="btn small-btn" id="pdfTabMerge" onclick="pdfShowMode('merge',this)" style="border-radius:999px;">Gabung PDF</button><button class="btn btn-outline small-btn" id="pdfTabSplit" onclick="pdfShowMode('split',this)" style="border-radius:999px;">Pisah / Pilih Halaman</button></div>
+
+<div id="pdfMergeMode">
+<input type="file" id="mergeInput" accept="application/pdf" multiple onchange="loadMergeFiles()">
+<div id="mergeList" class="file-name" style="margin-top:10px;"></div>
+<div id="mergePreview" style="margin-top:16px;"></div>
+<button class="btn" id="btnMerge" style="width:100%;margin-top:16px;" disabled onclick="mergePDF()">Gabung Semua & Unduh</button>
+<p id="mergeStatus" class="card-hint" style="text-align:center;margin-top:10px;"></p>
+</div>
+
+<div id="pdfSplitMode" style="display:none;">
+<input type="file" id="splitInput" accept="application/pdf" onchange="loadSplitFile()">
+<div id="splitName" class="file-name" style="margin-top:10px;"></div>
+<p class="card-hint" id="splitHint" style="display:none;margin-top:12px;">Klik halaman yang ingin diambil (yang terpilih akan bertanda hijau), lalu klik Ekstrak.</p>
+<div id="splitPreview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:16px;"></div>
+<div class="tools-bar" id="splitActions" style="display:none;margin-top:16px;"><button class="btn btn-outline small-btn" onclick="splitSelectAll()">Pilih Semua</button><button class="btn btn-outline small-btn" onclick="splitSelectNone()">Hapus Pilihan</button></div>
+<button class="btn" id="btnSplit" style="width:100%;margin-top:12px;" disabled onclick="splitPDF()">Ekstrak Halaman Terpilih & Unduh</button>
+<p id="splitStatus" class="card-hint" style="text-align:center;margin-top:10px;"></p>
+</div>
+</div></div>
+
+<!-- PDF TO WORD -->
+<div id="pdf-to-word" class="page">
+<div class="grid">
+<div class="card"><h2>Convert PDF ke Word</h2><p class="card-hint">Ekstrak teks dari PDF menjadi file Word (.docx) yang bisa diedit. Cocok untuk PDF berisi teks (bukan hasil scan gambar).</p>
+<div class="drop-zone" id="pdfWordDropZone" onclick="document.getElementById('pdfWordInput').click()"><svg style="width:46px;height:46px;fill:var(--primary);margin-bottom:10px;" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg><p style="margin:0;font-weight:700;">Klik atau Drag & Drop PDF</p><p class="card-hint" style="margin:5px 0 0;">File PDF</p><input type="file" id="pdfWordInput" accept="application/pdf" style="display:none;" onchange="handlePdfWord(this.files[0])"></div>
+<div id="pdfWordName" class="file-name" style="margin-top:10px;"></div>
+<div class="progress-bar-container" id="pdfWordProgress"><div class="progress-bar" id="pdfWordBar"></div></div>
+<p id="pdfWordStatus" class="card-hint" style="text-align:center;margin-top:10px;"></p>
+<button class="btn" id="btnPdfWord" style="width:100%;margin-top:15px;" disabled onclick="convertPdfToWord()">Convert & Unduh Word</button></div>
+<div class="card" style="display:flex;flex-direction:column;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;"><h3 style="margin:0;">Preview Teks</h3><button class="btn btn-outline small-btn" onclick="copyText('pdfWordResult')">📋 Copy</button></div><textarea id="pdfWordResult" style="flex-grow:1;min-height:340px;resize:vertical;" placeholder="Teks yang diekstrak akan muncul di sini sebelum diunduh..."></textarea></div></div></div>
 
 <!-- QR CODE -->
 <div id="qr-code" class="page"><div class="grid"><div class="card"><h2>QR Code Generator</h2><div class="form-group"><label>Teks / URL</label><textarea id="qrText" style="min-height:90px;resize:vertical;" oninput="generateQR()">https://google.com</textarea></div><div class="form-group"><label>Ukuran</label><select id="qrSize" onchange="generateQR()"><option value="200">200</option><option value="300" selected>300</option><option value="500">500</option></select></div><button class="btn btn-outline" style="width:100%;" onclick="downloadQR()">⬇️ Unduh PNG</button></div><div class="card" style="display:flex;align-items:center;justify-content:center;"><div id="qrCanvasBox"></div></div></div></div>
@@ -305,38 +325,15 @@ sb.auth.onAuthStateChange((event, session) => {
   }
 });
 
-function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
-  if (tab==='login') { document.querySelectorAll('.auth-tab')[0].classList.add('active'); document.getElementById('loginForm').classList.add('active'); }
-  else { document.querySelectorAll('.auth-tab')[1].classList.add('active'); document.getElementById('registerForm').classList.add('active'); }
-}
-
-async function doRegister() {
-  const name=document.getElementById('regName').value.trim(), email=document.getElementById('regEmail').value.trim(), pass=document.getElementById('regPass').value;
-  if (!name||!email||!pass) return alert('Lengkapi semua field.');
-  if (pass.length<6) return alert('Password minimal 6 karakter.');
-  const btn=document.querySelector('#registerForm .btn'); btn.disabled=true; btn.textContent='Mendaftar...';
-  const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
-  btn.disabled=false; btn.textContent='Buat Akun';
-  if (error) return alert('Gagal daftar: ' + error.message);
-  alert('Berhasil! Cek email untuk konfirmasi, lalu login.');
-  switchAuthTab('login');
-}
-
-async function doLogin() {
-  const email=document.getElementById('loginEmail').value.trim(), pass=document.getElementById('loginPass').value;
-  if (!email||!pass) return alert('Lengkapi email & password.');
-  const btn=document.querySelector('#loginForm .btn'); btn.disabled=true; btn.textContent='Masuk...';
-  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-  btn.disabled=false; btn.textContent='Masuk';
-  if (error) return alert('Login gagal: ' + (error.message==='Invalid login credentials'?'Email atau password salah.':error.message));
-}
+function switchAuthTab(tab) {}
 
 async function doGoogleLogin() {
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin + window.location.pathname }
+    options: {
+      redirectTo: window.location.origin + window.location.pathname,
+      queryParams: { prompt: 'select_account' }
+    }
   });
   if (error) alert('Error: ' + error.message);
 }
@@ -377,7 +374,7 @@ function exportToExcel(tid,fn){let csv=[],rows=document.querySelectorAll('#'+tid
 
 /* ===== INIT ===== */
 let toolsInit=false;
-function initTools(){if(toolsInit)return;toolsInit=true;runTerbilang();generateQR();generatePassword();kurAddDefaultRows();kurCalc();initOCR();initVoice();}
+function initTools(){if(toolsInit)return;toolsInit=true;if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';generateQR();generatePassword();kurAddDefaultRows();kurCalc();initOCR();initVoice();}
 
 /* ===== LOAN CALCULATOR ===== */
 function hitungAngsuran(){
@@ -418,10 +415,6 @@ function hitungDeposito(){const pokok=getNum('depPokok'),rate=parseFloat(documen
 for(let i=1;i<=tenor;i++){let base=roll?saldo:pokok,br=base*((rate/100)/12),pj=br*(tax/100),net=br-pj;tN+=net;tT+=pj;let sA=saldo;if(roll)saldo+=net;html+='<tr><td class="text-center">'+i+'</td><td class="num">'+formatRupiah(sA)+'</td><td class="num">'+formatRupiah(br)+'</td><td class="num" style="color:var(--danger)">'+formatRupiah(pj)+'</td><td class="num" style="color:var(--primary)">'+formatRupiah(net)+'</td><td class="num"><strong>'+formatRupiah(roll?saldo:pokok)+'</strong></td></tr>';}
 document.getElementById('depNet').innerText=formatRupiah(tN);document.getElementById('depTaxTotal').innerText=formatRupiah(tT);document.getElementById('depFinal').innerText=formatRupiah(roll?saldo:pokok+tN);document.getElementById('depSummaryBox').style.display='block';document.getElementById('depTableBody').innerHTML=html;document.getElementById('depTableCard').style.display='block';}
 
-/* ===== TERBILANG ===== */
-function terbilang(n){n=Math.floor(Math.abs(n));const s=["","satu","dua","tiga","empat","lima","enam","tujuh","delapan","sembilan","sepuluh","sebelas"];function f(x){x=Math.floor(x);if(x<12)return s[x];if(x<20)return f(x-10)+" belas";if(x<100)return f(Math.floor(x/10))+" puluh"+(x%10?" "+s[x%10]:"");if(x<200)return"seratus"+(x-100?" "+f(x-100):"");if(x<1000)return s[Math.floor(x/100)]+" ratus"+(x%100?" "+f(x%100):"");if(x<2000)return"seribu"+(x-1000?" "+f(x-1000):"");if(x<1e6)return f(Math.floor(x/1000))+" ribu"+(x%1000?" "+f(x%1000):"");if(x<1e9)return f(Math.floor(x/1e6))+" juta"+(x%1e6?" "+f(x%1e6):"");if(x<1e12)return f(Math.floor(x/1e9))+" miliar"+(x%1e9?" "+f(x%1e9):"");return f(Math.floor(x/1e12))+" triliun"+(x%1e12?" "+f(x%1e12):"");}if(n===0)return"nol";return f(n).replace(/\s+/g,' ').trim();}
-function runTerbilang(){const n=getNum('tbInput'),w=terbilang(n)+' rupiah';document.getElementById('tbTitle').innerText=w.replace(/\b\w/g,c=>c.toUpperCase());document.getElementById('tbLower').innerText=w;}
-
 /* ===== DATE & PENALTY ===== */
 function parseDate(id){const v=document.getElementById(id).value;return v?new Date(v+'T00:00:00'):null;}
 function fmtDate(d){return d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
@@ -438,25 +431,85 @@ async function handleOCRImage(file){if(!file)return;const btn=document.getElemen
 async function runOCR(){if(!currentOcrDataUrl)return;const btn=document.getElementById('btnRunOcr'),pc=document.getElementById('ocrProgressContainer'),pb=document.getElementById('ocrProgressBar'),st=document.getElementById('ocrStatus'),res=document.getElementById('ocrResult'),lang=document.getElementById('ocrLang').value;btn.disabled=true;pc.style.display='block';res.value='Memproses...';try{const{data:{text,confidence}}=await Tesseract.recognize(currentOcrDataUrl,lang,{logger:m=>{if(m.status==='recognizing text'){let p=Math.round(m.progress*100);pb.style.width=p+'%';st.innerText='Menganalisa: '+p+'%';}else st.innerText=m.status+'...';}});res.value=text;st.innerText='Selesai! Confidence: '+confidence.toFixed(2)+'%';}catch(e){console.error(e);res.value='Error.';st.innerText='Gagal.';}finally{btn.disabled=false;}}
 
 /* ===== VOICE ===== */
+// ====== GOOGLE SPEECH-TO-TEXT SETUP ======
+// Untuk fitur "Upload Voice Note", isi API key Google Cloud Speech-to-Text di bawah ini.
+// Cara dapat: console.cloud.google.com > enable "Cloud Speech-to-Text API" > Credentials > API Key
+const GOOGLE_SPEECH_API_KEY = ''; // <-- ISI API KEY ANDA DI SINI
+
 let recognition,isListening=false,audioContext,analyser,microphone,drawVisual;
-function initVoice(){const bm=document.getElementById('btnMic'),vs=document.getElementById('voiceStatus');if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){bm.disabled=true;vs.innerText='Browser tidak mendukung.';return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;recognition=new SR();recognition.continuous=true;recognition.interimResults=true;
+function initVoice(){const bm=document.getElementById('btnMic'),vs=document.getElementById('voiceStatus');if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){bm.disabled=true;vs.innerText='Browser tidak mendukung mic.';return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;recognition=new SR();recognition.continuous=true;recognition.interimResults=true;
 recognition.onstart=()=>{isListening=true;bm.classList.add('listening');vs.innerText='Listening...';vs.classList.add('active');startVisualizer();};
 recognition.onresult=e=>{let ft='';for(let i=e.resultIndex;i<e.results.length;++i)if(e.results[i].isFinal)ft+=e.results[i][0].transcript+' ';if(ft!=='')document.getElementById('voiceResult').value+=(document.getElementById('voiceResult').value?'\n':'')+ft.trim();};
 recognition.onerror=e=>{console.error(e.error);if(e.error==='not-allowed')alert('Akses mikrofon ditolak.');stopMic();};
 recognition.onend=()=>{if(isListening)recognition.start();else stopMic();};}
-function toggleMic(){if(!recognition)return;if(isListening){isListening=false;recognition.stop();stopMic();}else{recognition.lang=document.getElementById('voiceLang').value;recognition.start();}}
+// Auto-detect: gunakan bahasa browser, fallback ke Indonesia
+function detectLang(){const l=(navigator.language||'id-ID');return l.startsWith('id')?'id-ID':l;}
+function toggleMic(){if(!recognition)return;if(isListening){isListening=false;recognition.stop();stopMic();}else{recognition.lang=detectLang();recognition.start();}}
 function stopMic(){isListening=false;document.getElementById('btnMic').classList.remove('listening');document.getElementById('voiceStatus').innerText='Standby';document.getElementById('voiceStatus').classList.remove('active');stopVisualizer();}
 async function startVisualizer(){const c=document.getElementById('visualizer');c.style.display='block';try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});audioContext=new(window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();microphone=audioContext.createMediaStreamSource(stream);microphone.connect(analyser);analyser.fftSize=256;const bl=analyser.frequencyBinCount,da=new Uint8Array(bl);c.width=c.parentElement.clientWidth;const ctx=c.getContext('2d');function draw(){if(!isListening)return;drawVisual=requestAnimationFrame(draw);analyser.getByteFrequencyData(da);ctx.fillStyle='#0B0D11';ctx.fillRect(0,0,c.width,c.height);const bw=(c.width/bl)*2.5;let x=0;for(let i=0;i<bl;i++){let bh=da[i]/2;ctx.fillStyle='rgb(0,'+Math.min(255,bh+120)+',118)';ctx.fillRect(x,c.height-bh,bw,bh);x+=bw+1;}}draw();}catch(e){console.error(e);}}
 function stopVisualizer(){if(drawVisual)cancelAnimationFrame(drawVisual);if(audioContext){audioContext.close();audioContext=null;}const c=document.getElementById('visualizer'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);c.style.display='none';}
 
-/* ===== PDF TOOLS ===== */
-let mergeFiles=[],splitFile=null;
-function showMergeFiles(){mergeFiles=Array.from(document.getElementById('mergeInput').files);document.getElementById('mergeList').innerHTML=mergeFiles.length?mergeFiles.map((f,i)=>(i+1)+'. '+f.name).join('<br>'):'';document.getElementById('btnMerge').disabled=mergeFiles.length<2;if(mergeFiles.length===1)document.getElementById('mergeStatus').innerText='Min 2 file.';}
-async function mergePDF(){const st=document.getElementById('mergeStatus');st.innerText='Menggabungkan...';try{const merged=await PDFLib.PDFDocument.create();for(const file of mergeFiles){const bytes=await file.arrayBuffer(),doc=await PDFLib.PDFDocument.load(bytes),pages=await merged.copyPages(doc,doc.getPageIndices());pages.forEach(p=>merged.addPage(p));}const out=await merged.save();dlBlob(out,'Gabungan.pdf');st.innerText='Berhasil!';}catch(e){console.error(e);st.innerText='Gagal.';}}
-function showSplitFile(){splitFile=document.getElementById('splitInput').files[0]||null;document.getElementById('splitName').innerText=splitFile?splitFile.name:'';document.getElementById('btnSplit').disabled=!splitFile;}
-function parseRange(str,max){const set=new Set();str.split(',').forEach(p=>{p=p.trim();if(!p)return;if(p.includes('-')){let[a,b]=p.split('-').map(x=>parseInt(x));if(isNaN(a)||isNaN(b))return;for(let i=a;i<=b;i++)if(i>=1&&i<=max)set.add(i-1);}else{let n=parseInt(p);if(n>=1&&n<=max)set.add(n-1);}});return[...set].sort((a,b)=>a-b);}
-async function splitPDF(){const st=document.getElementById('splitStatus');if(!splitFile)return;const rs=document.getElementById('splitRange').value.trim();if(!rs){st.innerText='Isi rentang.';return;}st.innerText='Memproses...';try{const bytes=await splitFile.arrayBuffer(),src=await PDFLib.PDFDocument.load(bytes),idx=parseRange(rs,src.getPageCount());if(!idx.length){st.innerText='Rentang tidak valid ('+src.getPageCount()+' hal).';return;}const out=await PDFLib.PDFDocument.create(),pages=await out.copyPages(src,idx);pages.forEach(p=>out.addPage(p));const bo=await out.save();dlBlob(bo,'Split.pdf');st.innerText=idx.length+' halaman diekstrak.';}catch(e){console.error(e);st.innerText='Gagal.';}}
+// ===== Voice Note File Upload → Google Speech-to-Text =====
+let voiceFile=null;
+function handleVoiceFile(file){if(!file)return;voiceFile=file;const audio=document.getElementById('voiceAudioPreview');audio.src=URL.createObjectURL(file);audio.style.display='block';document.getElementById('btnTranscribeFile').disabled=false;document.getElementById('voiceFileStatus').innerText=file.name;}
+function blobToBase64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onloadend=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(blob);});}
+// Decode audio file → mono 16kHz LINEAR16 PCM (format yang diterima Google Speech)
+async function audioToLinear16(file){const arrayBuf=await file.arrayBuffer();const ctxTmp=new(window.AudioContext||window.webkitAudioContext)();const decoded=await ctxTmp.decodeAudioData(arrayBuf);const targetRate=16000;const offline=new OfflineAudioContext(1,Math.ceil(decoded.duration*targetRate),targetRate);const src=offline.createBufferSource();src.buffer=decoded;src.connect(offline.destination);src.start();const rendered=await offline.startRendering();const data=rendered.getChannelData(0);const buf=new ArrayBuffer(data.length*2);const view=new DataView(buf);for(let i=0;i<data.length;i++){let s=Math.max(-1,Math.min(1,data[i]));view.setInt16(i*2,s<0?s*0x8000:s*0x7FFF,true);}ctxTmp.close();return new Blob([buf]);}
+async function transcribeVoiceFile(){
+  if(!voiceFile)return;
+  const st=document.getElementById('voiceFileStatus'),btn=document.getElementById('btnTranscribeFile');
+  if(!GOOGLE_SPEECH_API_KEY){alert('API Key Google Speech-to-Text belum diisi.\n\nBuka kode HTML, cari GOOGLE_SPEECH_API_KEY, dan isi dengan API key dari Google Cloud Console.');return;}
+  btn.disabled=true;st.innerText='Memproses audio...';
+  try{
+    const pcmBlob=await audioToLinear16(voiceFile);
+    const b64=await blobToBase64(pcmBlob);
+    st.innerText='Mengirim ke Google Speech...';
+    const body={config:{encoding:'LINEAR16',sampleRateHertz:16000,languageCode:'id-ID',alternativeLanguageCodes:['en-US'],enableAutomaticPunctuation:true},audio:{content:b64}};
+    const resp=await fetch('https://speech.googleapis.com/v1/speech:recognize?key='+GOOGLE_SPEECH_API_KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await resp.json();
+    if(data.error){st.innerText='Error: '+data.error.message;btn.disabled=false;return;}
+    if(!data.results){st.innerText='Tidak ada suara terdeteksi.';btn.disabled=false;return;}
+    const text=data.results.map(r=>r.alternatives[0].transcript).join('\n');
+    const box=document.getElementById('voiceResult');box.value+=(box.value?'\n':'')+text;
+    st.innerText='Selesai!';
+  }catch(e){console.error(e);st.innerText='Gagal memproses. Cek console.';}
+  btn.disabled=false;
+}
+
+/* ===== PDF TOOLS (with preview) ===== */
+function pdfShowMode(mode,btn){document.getElementById('pdfMergeMode').style.display=mode==='merge'?'block':'none';document.getElementById('pdfSplitMode').style.display=mode==='split'?'block':'none';document.getElementById('pdfTabMerge').className=mode==='merge'?'btn small-btn':'btn btn-outline small-btn';document.getElementById('pdfTabSplit').className=mode==='split'?'btn small-btn':'btn btn-outline small-btn';[document.getElementById('pdfTabMerge'),document.getElementById('pdfTabSplit')].forEach(b=>b.style.borderRadius='999px');}
+
+// --- MERGE with thumbnails ---
+let mergeFiles=[];
+async function loadMergeFiles(){mergeFiles=Array.from(document.getElementById('mergeInput').files);const list=document.getElementById('mergeList'),prev=document.getElementById('mergePreview');document.getElementById('btnMerge').disabled=mergeFiles.length<2;list.innerHTML=mergeFiles.length?(mergeFiles.length+' file dipilih'):'';prev.innerHTML='';if(mergeFiles.length===1)document.getElementById('mergeStatus').innerText='Minimal 2 file untuk digabung.';else document.getElementById('mergeStatus').innerText='';
+for(let fi=0;fi<mergeFiles.length;fi++){const file=mergeFiles[fi];const wrap=document.createElement('div');wrap.className='pdf-mergefile';wrap.innerHTML='<div class="mf-head"><span>'+(fi+1)+'. '+file.name+'</span></div>';const thumbs=document.createElement('div');thumbs.className='mf-thumbs';wrap.appendChild(thumbs);prev.appendChild(wrap);
+try{const ab=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise;const maxShow=Math.min(pdf.numPages,6);for(let p=1;p<=maxShow;p++){const page=await pdf.getPage(p),vp=page.getViewport({scale:0.3}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;thumbs.appendChild(cv);}if(pdf.numPages>6){const more=document.createElement('div');more.style.cssText='display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px;';more.textContent='+'+(pdf.numPages-6)+' hal';thumbs.appendChild(more);}}catch(e){console.error(e);}}}
+async function mergePDF(){const st=document.getElementById('mergeStatus');st.innerText='Menggabungkan...';try{const merged=await PDFLib.PDFDocument.create();for(const file of mergeFiles){const bytes=await file.arrayBuffer(),doc=await PDFLib.PDFDocument.load(bytes),pages=await merged.copyPages(doc,doc.getPageIndices());pages.forEach(p=>merged.addPage(p));}const out=await merged.save();dlBlob(out,'Gabungan.pdf');st.innerText='Berhasil digabung!';}catch(e){console.error(e);st.innerText='Gagal.';}}
+
+// --- SPLIT with clickable page thumbnails ---
+let splitFile=null, splitSelected=new Set(), splitTotalPages=0;
+async function loadSplitFile(){splitFile=document.getElementById('splitInput').files[0]||null;const prev=document.getElementById('splitPreview'),name=document.getElementById('splitName');splitSelected.clear();prev.innerHTML='';document.getElementById('btnSplit').disabled=true;if(!splitFile){name.innerText='';return;}name.innerText=splitFile.name;document.getElementById('splitHint').style.display='block';document.getElementById('splitActions').style.display='flex';document.getElementById('splitStatus').innerText='Merender halaman...';
+try{const ab=await splitFile.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise;splitTotalPages=pdf.numPages;for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),vp=page.getViewport({scale:0.5}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;const div=document.createElement('div');div.className='pdf-thumb';div.dataset.page=p;div.innerHTML='<div class="pnum">Hal '+p+'</div>';div.insertBefore(cv,div.firstChild);div.onclick=()=>toggleSplitPage(p,div);prev.appendChild(div);}document.getElementById('splitStatus').innerText=pdf.numPages+' halaman. Klik untuk memilih.';}catch(e){console.error(e);document.getElementById('splitStatus').innerText='Gagal memuat PDF.';}}
+function toggleSplitPage(p,div){if(splitSelected.has(p)){splitSelected.delete(p);div.classList.remove('selected');}else{splitSelected.add(p);div.classList.add('selected');}document.getElementById('btnSplit').disabled=splitSelected.size===0;document.getElementById('splitStatus').innerText=splitSelected.size+' halaman dipilih.';}
+function splitSelectAll(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>{const p=parseInt(d.dataset.page);splitSelected.add(p);d.classList.add('selected');});document.getElementById('btnSplit').disabled=splitSelected.size===0;document.getElementById('splitStatus').innerText=splitSelected.size+' halaman dipilih.';}
+function splitSelectNone(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>d.classList.remove('selected'));splitSelected.clear();document.getElementById('btnSplit').disabled=true;document.getElementById('splitStatus').innerText='0 halaman dipilih.';}
+async function splitPDF(){const st=document.getElementById('splitStatus');if(!splitFile||splitSelected.size===0)return;st.innerText='Memproses...';try{const idx=[...splitSelected].sort((a,b)=>a-b).map(p=>p-1);const bytes=await splitFile.arrayBuffer(),src=await PDFLib.PDFDocument.load(bytes),out=await PDFLib.PDFDocument.create(),pages=await out.copyPages(src,idx);pages.forEach(p=>out.addPage(p));const bo=await out.save();dlBlob(bo,'Halaman_Terpilih.pdf');st.innerText=idx.length+' halaman diekstrak!';}catch(e){console.error(e);st.innerText='Gagal.';}}
 function dlBlob(bytes,fn){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));a.download=fn;a.click();}
+
+/* ===== PDF TO WORD ===== */
+let pdfWordFile=null;
+function handlePdfWord(file){if(!file)return;pdfWordFile=file;document.getElementById('pdfWordName').innerText=file.name;document.getElementById('btnPdfWord').disabled=false;document.getElementById('pdfWordStatus').innerText='Siap dikonversi.';document.getElementById('pdfWordResult').value='';}
+(function(){const dz=document.getElementById('pdfWordDropZone');if(dz){dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');if(e.dataTransfer.files.length)handlePdfWord(e.dataTransfer.files[0]);});}})();
+async function convertPdfToWord(){if(!pdfWordFile)return;const st=document.getElementById('pdfWordStatus'),pc=document.getElementById('pdfWordProgress'),pb=document.getElementById('pdfWordBar'),btn=document.getElementById('btnPdfWord'),resBox=document.getElementById('pdfWordResult');btn.disabled=true;pc.style.display='block';st.innerText='Mengekstrak teks...';
+try{const ab=await pdfWordFile.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise;let allParas=[];for(let p=1;p<=pdf.numPages;p++){pb.style.width=Math.round(p/pdf.numPages*100)+'%';st.innerText='Halaman '+p+'/'+pdf.numPages;const page=await pdf.getPage(p),tc=await page.getTextContent();let lastY=null,line='';const lines=[];tc.items.forEach(it=>{if(lastY!==null&&Math.abs(it.transform[5]-lastY)>3){lines.push(line);line='';}line+=it.str;lastY=it.transform[5];});if(line)lines.push(line);lines.forEach(l=>allParas.push(l));if(p<pdf.numPages)allParas.push('');}
+const fullText=allParas.join('\n');resBox.value=fullText;
+st.innerText='Membuat file Word...';
+// Build a minimal valid .docx using JSZip-free approach via docx XML in a zip. Use browser Blob + manual zip is complex;
+// Instead produce a Word-compatible HTML doc (.doc) that Word opens natively.
+const escaped=allParas.map(t=>t?('<p>'+t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</p>'):'<p>&nbsp;</p>').join('');
+const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Konversi</title></head><body style="font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.5;">'+escaped+'</body></html>';
+const blob=new Blob(['\ufeff',html],{type:'application/msword'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=pdfWordFile.name.replace(/\.pdf$/i,'')+'.doc';a.click();
+st.innerText='Selesai! File Word terunduh.';}catch(e){console.error(e);st.innerText='Gagal mengkonversi.';}finally{btn.disabled=false;pc.style.display='none';}}
 
 /* ===== QR CODE ===== */
 let qrObj=null;
