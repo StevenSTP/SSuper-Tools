@@ -90,6 +90,24 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 .pdf-mergefile .mf-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:8px}
 .pdf-mergefile .mf-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
 .pdf-mergefile .mf-thumbs canvas{width:100%;border:1px solid var(--border);border-radius:4px}
+/* ===== PDF progress + reorder ===== */
+.pdf-progress{width:100%;height:8px;background:var(--card-2);border-radius:99px;overflow:hidden;margin-top:14px;border:1px solid var(--border-soft)}
+.pdf-progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--primary),#FF6B35);border-radius:99px;transition:width .2s}
+.pdf-merge-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-soft);border-radius:12px;background:var(--card-2);margin-bottom:10px;cursor:grab}
+.pdf-merge-item.dragging{opacity:.4}
+.pdf-merge-item.dragover{border-color:var(--primary);border-style:dashed}
+.pdf-merge-handle{font-size:18px;color:var(--text-muted);cursor:grab;flex-shrink:0}
+.pdf-merge-order{width:26px;height:26px;border-radius:50%;background:var(--primary);color:#04130C;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.pdf-merge-thumb{width:44px;height:56px;object-fit:cover;border:1px solid var(--border);border-radius:5px;flex-shrink:0;background:#fff}
+.pdf-merge-name{flex:1;min-width:0;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdf-merge-pages{font-size:11px;color:var(--text-muted)}
+.pdf-split-filegroup{margin-top:16px}
+.pdf-split-filehead{font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-soft)}
+.pdf-split-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+/* ===== KUR STEP ===== */
+.kur-step{border:1px solid var(--border-soft);border-radius:14px;padding:18px;margin-bottom:16px;background:var(--card-2)}
+.kur-step-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.kur-step-num{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#04130C;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
 /* ===== LOADING OVERLAY ===== */
 #initLoading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;transition:opacity .3s}
 #initLoading.hide{opacity:0;pointer-events:none}
@@ -303,20 +321,34 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 <div id="kur-simulator" class="page"><div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;"><div><h2 style="margin-bottom:4px;">KUR Rules Simulator</h2><p class="card-hint" style="margin:0;">Input fasilitas lunas & pengajuan baru.</p></div>
 <div class="tools-bar"><button class="btn small-btn" id="kurTabSim" onclick="kurShowSection('kurSimulator',this)" style="border-radius:999px;">Simulator</button><button class="btn btn-outline small-btn" id="kurTabMatrix" onclick="kurShowSection('kurMatrix',this)" style="border-radius:999px;">Decision Matrix</button></div></div>
-<div id="kurSimulator"><div class="grid"><div>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3>1) Fasilitas Eksisting (Lunas)</h3><button class="btn btn-outline small-btn" onclick="kurAddRow()">+ Tambah</button></div>
-<div class="table-container" style="max-height:300px;"><table><thead><tr><th style="text-align:left;min-width:120px;">Skema</th><th style="text-align:left;min-width:140px;">Sektor</th><th style="min-width:70px;">Count</th><th style="min-width:120px;">Plafond</th><th style="width:60px;">Aksi</th></tr></thead><tbody id="kurFacilityBody"></tbody></table></div>
-<div class="kur-summarygrid"><div class="kur-summary"><div class="k">Count NENP</div><div class="v" id="kurSumCountNenp">0</div></div><div class="kur-summary"><div class="k">Plafond NENP</div><div class="v" id="kurSumPlafondNenp">0</div></div><div class="kur-summary"><div class="k">Count All</div><div class="v" id="kurSumCountAll">0</div></div><div class="kur-summary"><div class="k">Plafond All</div><div class="v" id="kurSumPlafondAll">0</div></div></div></div>
-<div><h3>2) Kredit Diajukan</h3><div class="kur-formgrid" style="margin-top:10px;">
+<div id="kurSimulator">
+<!-- STEP 1: Predecessor -->
+<div class="kur-step">
+<div class="kur-step-head"><span class="kur-step-num">1</span><div><h3 style="margin:0;">Kredit Predecessor (Riwayat Lunas)</h3><p class="card-hint" style="margin:2px 0 0;">Masukkan fasilitas KUR yang sudah pernah lunas. Kosongkan jika nasabah baru.</p></div></div>
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px;"><button class="btn btn-outline small-btn" onclick="kurAddRow()">+ Tambah Riwayat</button></div>
+<div class="table-container" style="max-height:260px;"><table><thead><tr><th style="text-align:left;min-width:110px;">Skema</th><th style="text-align:left;min-width:130px;">Sektor</th><th style="min-width:60px;">Jumlah</th><th style="min-width:120px;">Plafond</th><th style="width:50px;"></th></tr></thead><tbody id="kurFacilityBody"></tbody></table></div>
+<div class="kur-summarygrid"><div class="kur-summary"><div class="k">Count NENP</div><div class="v" id="kurSumCountNenp">0</div></div><div class="kur-summary"><div class="k">Plafond NENP</div><div class="v" id="kurSumPlafondNenp">0</div></div><div class="kur-summary"><div class="k">Count All</div><div class="v" id="kurSumCountAll">0</div></div><div class="kur-summary"><div class="k">Plafond All</div><div class="v" id="kurSumPlafondAll">0</div></div></div>
+</div>
+
+<!-- STEP 2: New application -->
+<div class="kur-step">
+<div class="kur-step-head"><span class="kur-step-num">2</span><div><h3 style="margin:0;">Pengajuan Kredit Terkini</h3><p class="card-hint" style="margin:2px 0 0;">Isi detail kredit yang sedang diajukan nasabah.</p></div></div>
+<div class="kur-formgrid" style="margin-top:6px;">
 <div class="form-group"><label>Skema</label><select id="kurNewScheme" onchange="kurCalc()"><option value="Mikro">KUR Mikro</option><option value="Kecil">KUR Kecil</option></select></div>
 <div class="form-group"><label>Sektor</label><select id="kurNewSector" onchange="kurCalc()"><option value="NENP">NENP</option><option value="ProduksiEkspor">Produksi/Ekspor</option></select></div>
-<div class="form-group"><label>Plafond (Rp)</label><input id="kurNewPlafond" type="text" value="50.000.000" oninput="formatInputUang(this);kurCalc()"></div>
+<div class="form-group"><label>Plafond Diajukan (Rp)</label><input id="kurNewPlafond" type="text" value="50.000.000" oninput="formatInputUang(this);kurCalc()"></div>
 <div class="form-group"><label>Graduasi SUMI?</label><select id="kurIsGrad" onchange="kurCalc()"><option value="no">Tidak</option><option value="yes">Ya</option></select></div></div>
-<button class="btn" style="width:100%;margin-top:6px;" onclick="kurCalc()">Hitung Hasil</button>
-<button class="btn btn-outline" style="width:100%;margin-top:8px;" onclick="kurReset()">Reset</button>
-<div class="kur-resultbox" style="margin-top:14px;"><div class="kur-badge warn" id="kurStatusBadge">Menunggu</div><h3>Keputusan</h3><p class="kur-big" id="kurDecisionText">-</p><p style="color:var(--text-muted);font-size:13px;" id="kurDecisionDetail">Klik Hitung Hasil.</p></div>
-<div class="kur-smallgrid" style="margin-top:12px;"><div class="kur-resultbox"><h3>Count Akad</h3><p class="kur-big" id="kurCountNow">-</p></div><div class="kur-resultbox"><h3>Bunga Final</h3><p class="kur-big" id="kurInterestText">-</p></div><div class="kur-resultbox"><h3>Plafond Check</h3><p class="kur-big" id="kurPlafondText" style="font-size:16px;">-</p></div></div>
-<div class="kur-resultbox" style="margin-top:12px;"><h3>Logika</h3><ul id="kurLogicList" style="padding-left:18px;font-size:13px;color:var(--text-muted);"><li>Belum diproses.</li></ul></div></div></div></div>
+<div class="tools-bar" style="margin-top:10px;"><button class="btn" style="flex:1;" onclick="kurCalc()">Hitung Keputusan</button><button class="btn btn-outline" onclick="kurReset()">Reset</button></div>
+</div>
+
+<!-- STEP 3: Result -->
+<div class="kur-step">
+<div class="kur-step-head"><span class="kur-step-num">3</span><div><h3 style="margin:0;">Hasil Keputusan</h3><p class="card-hint" style="margin:2px 0 0;">Berdasarkan Decision Matrix KUR.</p></div></div>
+<div class="kur-resultbox" style="margin-top:6px;"><div class="kur-badge warn" id="kurStatusBadge">Menunggu</div><h3 style="margin-top:10px;">Keputusan Akhir</h3><p class="kur-big" id="kurDecisionText">-</p><p style="color:var(--text-muted);font-size:13px;" id="kurDecisionDetail">Klik "Hitung Keputusan".</p></div>
+<div class="kur-smallgrid" style="margin-top:12px;"><div class="kur-resultbox"><h3>Count Akad Ini</h3><p class="kur-big" id="kurCountNow">-</p></div><div class="kur-resultbox"><h3>Suku Bunga</h3><p class="kur-big" id="kurInterestText">-</p></div><div class="kur-resultbox"><h3>Cek Plafond</h3><p class="kur-big" id="kurPlafondText" style="font-size:16px;">-</p></div></div>
+<div class="kur-resultbox" style="margin-top:12px;"><h3>Rincian Logika</h3><ul id="kurLogicList" style="padding-left:18px;font-size:13px;color:var(--text-muted);margin:8px 0 0;"><li>Belum diproses.</li></ul></div>
+</div>
+</div>
 <div id="kurMatrix" style="display:none;"><div class="table-container"><table style="font-size:13px;"><thead><tr><th style="text-align:center;width:60px;">Rule</th><th style="text-align:left;">Skema</th><th style="text-align:left;">Sektor</th><th>Hist</th><th>Akad</th><th style="text-align:left;">Validasi</th><th>Bunga</th></tr></thead><tbody>
 <tr><td class="text-center"><span class="pill good">R1</span></td><td style="text-align:left;">Mikro</td><td style="text-align:left;">Produksi/Ekspor</td><td>Any</td><td>Any</td><td style="text-align:left;">Approve</td><td>6%</td></tr>
 <tr><td class="text-center"><span class="pill good">R2</span></td><td style="text-align:left;">Mikro</td><td style="text-align:left;">NENP</td><td>0</td><td>1</td><td style="text-align:left;">Approve</td><td>6%</td></tr>
@@ -371,25 +403,45 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 
 <!-- PDF TOOLS -->
 <div id="pdf-tools" class="page">
-<div class="card"><h2>PDF Tools</h2><p class="card-hint">Gabung beberapa PDF atau pilih halaman tertentu. Klik thumbnail halaman untuk memilih.</p>
-<div class="tools-bar" style="margin-bottom:16px;"><button class="btn small-btn" id="pdfTabMerge" onclick="pdfShowMode('merge',this)" style="border-radius:999px;">Gabung PDF</button><button class="btn btn-outline small-btn" id="pdfTabSplit" onclick="pdfShowMode('split',this)" style="border-radius:999px;">Pisah / Pilih Halaman</button></div>
+<div class="card"><h2>PDF Tools</h2><p class="card-hint">Gabung, pisah, atau kompres file PDF. Semua diproses di browser Anda (aman & privat).</p>
+<div class="tools-bar" style="margin-bottom:16px;flex-wrap:wrap;">
+<button class="btn small-btn" id="pdfTabMerge" onclick="pdfShowMode('merge')" style="border-radius:999px;">Gabung PDF</button>
+<button class="btn btn-outline small-btn" id="pdfTabSplit" onclick="pdfShowMode('split')" style="border-radius:999px;">Pisah / Pilih Halaman</button>
+<button class="btn btn-outline small-btn" id="pdfTabCompress" onclick="pdfShowMode('compress')" style="border-radius:999px;">Kompres PDF</button>
+</div>
 
+<!-- MERGE MODE -->
 <div id="pdfMergeMode">
 <input type="file" id="mergeInput" accept="application/pdf" multiple onchange="loadMergeFiles()">
 <div id="mergeList" class="file-name" style="margin-top:10px;"></div>
-<div id="mergePreview" style="margin-top:16px;"></div>
+<div id="mergeProgress" class="pdf-progress" style="display:none;"><div class="pdf-progress-bar" id="mergeProgressBar"></div></div>
+<p class="card-hint" id="mergeReorderHint" style="display:none;margin-top:14px;">↕️ Seret file untuk mengatur urutan penggabungan (atas = halaman pertama).</p>
+<div id="mergePreview" style="margin-top:12px;"></div>
 <button class="btn" id="btnMerge" style="width:100%;margin-top:16px;" disabled onclick="mergePDF()">Gabung Semua & Unduh</button>
-<p id="mergeStatus" class="card-hint" style="text-align:center;margin-top:10px;"></p>
+<p id="mergeStatus" class="card-hint" style="text-align:center;margin-top:10px;min-height:18px;"></p>
 </div>
 
+<!-- SPLIT MODE -->
 <div id="pdfSplitMode" style="display:none;">
-<input type="file" id="splitInput" accept="application/pdf" onchange="loadSplitFile()">
-<div id="splitName" class="file-name" style="margin-top:10px;"></div>
-<p class="card-hint" id="splitHint" style="display:none;margin-top:12px;">Klik halaman yang ingin diambil (yang terpilih akan bertanda hijau), lalu klik Ekstrak.</p>
-<div id="splitPreview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:16px;"></div>
-<div class="tools-bar" id="splitActions" style="display:none;margin-top:16px;"><button class="btn btn-outline small-btn" onclick="splitSelectAll()">Pilih Semua</button><button class="btn btn-outline small-btn" onclick="splitSelectNone()">Hapus Pilihan</button></div>
+<input type="file" id="splitInput" accept="application/pdf" multiple onchange="loadSplitFiles()">
+<p class="card-hint" style="margin-top:8px;">Bisa pilih lebih dari 1 PDF. Halaman dari semua file akan muncul, klik untuk memilih.</p>
+<div id="splitProgress" class="pdf-progress" style="display:none;"><div class="pdf-progress-bar" id="splitProgressBar"></div></div>
+<p id="splitLoadStatus" class="card-hint" style="text-align:center;margin-top:8px;"></p>
+<div class="tools-bar" id="splitActions" style="display:none;margin-top:12px;flex-wrap:wrap;"><button class="btn btn-outline small-btn" onclick="splitSelectAll()">Pilih Semua</button><button class="btn btn-outline small-btn" onclick="splitSelectNone()">Hapus Pilihan</button><span class="card-hint" id="splitSelCount" style="margin-left:auto;align-self:center;">0 dipilih</span></div>
+<div id="splitPreview" style="margin-top:14px;"></div>
 <button class="btn" id="btnSplit" style="width:100%;margin-top:12px;" disabled onclick="splitPDF()">Ekstrak Halaman Terpilih & Unduh</button>
-<p id="splitStatus" class="card-hint" style="text-align:center;margin-top:10px;"></p>
+<p id="splitStatus" class="card-hint" style="text-align:center;margin-top:10px;min-height:18px;"></p>
+</div>
+
+<!-- COMPRESS MODE -->
+<div id="pdfCompressMode" style="display:none;">
+<input type="file" id="compressInput" accept="application/pdf" onchange="loadCompressFile()">
+<div id="compressName" class="file-name" style="margin-top:10px;"></div>
+<div class="form-group" style="margin-top:14px;max-width:320px;"><label>Tingkat Kompresi</label><select id="compressLevel"><option value="0.5">Ringan (kualitas tinggi)</option><option value="0.3" selected>Sedang (seimbang)</option><option value="0.15">Berat (ukuran terkecil)</option></select></div>
+<p class="card-hint">Kompresi bekerja optimal pada PDF hasil scan / berisi gambar.</p>
+<div id="compressProgress" class="pdf-progress" style="display:none;"><div class="pdf-progress-bar" id="compressProgressBar"></div></div>
+<button class="btn" id="btnCompress" style="width:100%;margin-top:12px;" disabled onclick="compressPDF()">Kompres & Unduh</button>
+<p id="compressStatus" class="card-hint" style="text-align:center;margin-top:10px;min-height:18px;"></p>
 </div>
 </div></div>
 
@@ -638,7 +690,11 @@ function hitungJatuhTempo(){const base=parseDate('dBase');if(!base)return alert(
 function hitungDenda(){const due=parseDate('penDue'),paid=parseDate('penPaid');if(!due||!paid)return alert('Lengkapi tanggal.');const amt=getNum('penAmount'),rate=parseFloat(document.getElementById('penRate').value)||0,basis=document.getElementById('penBasis').value,ld=Math.max(0,daysBetween(due,paid));let denda=0,ket='';if(basis==='dayPct'){denda=amt*(rate/100)*ld;ket=rate+'% x '+ld+' hari';}else if(basis==='monthPct'){const mo=Math.ceil(ld/30);denda=amt*(rate/100)*mo;ket=rate+'% x '+mo+' bulan';}else{denda=rate*ld;ket=formatRupiah(rate)+' x '+ld+' hari';}const box=document.getElementById('penResult');box.style.display='block';const late=ld>0;box.innerHTML='<span class="card-hint">Telat '+ld+' hari</span><div style="font-size:30px;font-weight:800;color:'+(late?'var(--danger)':'var(--primary)')+';margin:6px 0;" class="num">'+formatRupiah(denda)+'</div><p class="card-hint" style="margin:0;">'+(late?ket:'Tepat waktu')+'</p>';}
 
 /* ===== OCR ===== */
-function initOCR(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';const dz=document.getElementById('dropZone');dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');if(e.dataTransfer.files.length)handleOCRImage(e.dataTransfer.files[0]);});}
+function initOCR(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';const dz=document.getElementById('dropZone');dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');if(e.dataTransfer.files.length)handleOCRImage(e.dataTransfer.files[0]);});
+// Ctrl+V paste image support (only when OCR page is active)
+document.addEventListener('paste',e=>{const ocrPage=document.getElementById('smart-ocr');if(!ocrPage||!ocrPage.classList.contains('active'))return;const items=(e.clipboardData||e.originalEvent.clipboardData).items;for(const it of items){if(it.type.indexOf('image')!==-1){const blob=it.getAsFile();handleOCRImage(blob);document.getElementById('ocrStatus').innerText='Gambar ditempel dari clipboard!';e.preventDefault();break;}}});
+// Add paste hint to drop zone
+const hint=dz.querySelector('.card-hint');if(hint)hint.innerHTML='JPG, PNG, WEBP, PDF · atau tekan <strong>Ctrl+V</strong>';}
 let currentOcrDataUrl=null;
 async function handleOCRImage(file){if(!file)return;const btn=document.getElementById('btnRunOcr'),st=document.getElementById('ocrStatus'),img=document.getElementById('ocrPreview');btn.disabled=true;img.style.display='none';if(file.type==='application/pdf'){st.innerText='Merender PDF...';try{const ab=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise,page=await pdf.getPage(1),vp=page.getViewport({scale:2}),cv=document.createElement('canvas'),ctx=cv.getContext('2d');cv.height=vp.height;cv.width=vp.width;await page.render({canvasContext:ctx,viewport:vp}).promise;currentOcrDataUrl=cv.toDataURL('image/png');img.src=currentOcrDataUrl;img.style.display='block';btn.disabled=false;st.innerText='PDF siap.';}catch(e){console.error(e);st.innerText='Gagal memuat PDF.';}}else if(file.type.startsWith('image/')){const r=new FileReader();r.onload=e=>{currentOcrDataUrl=e.target.result;img.src=currentOcrDataUrl;img.style.display='block';btn.disabled=false;st.innerText='Gambar siap.';};r.readAsDataURL(file);}else alert('Format tidak didukung.');}
 async function runOCR(){if(!currentOcrDataUrl)return;const btn=document.getElementById('btnRunOcr'),pc=document.getElementById('ocrProgressContainer'),pb=document.getElementById('ocrProgressBar'),st=document.getElementById('ocrStatus'),res=document.getElementById('ocrResult'),lang=document.getElementById('ocrLang').value;btn.disabled=true;pc.style.display='block';res.value='Memproses...';try{const{data:{text,confidence}}=await Tesseract.recognize(currentOcrDataUrl,lang,{logger:m=>{if(m.status==='recognizing text'){let p=Math.round(m.progress*100);pb.style.width=p+'%';st.innerText='Menganalisa: '+p+'%';}else st.innerText=m.status+'...';}});res.value=text;st.innerText='Selesai! Confidence: '+confidence.toFixed(2)+'%';}catch(e){console.error(e);res.value='Error.';st.innerText='Gagal.';}finally{btn.disabled=false;}}
@@ -689,84 +745,177 @@ async function transcribeVoiceFile(){
   btn.disabled=false;
 }
 
-/* ===== PDF TOOLS (optimized thumbnails) ===== */
-function pdfShowMode(mode){document.getElementById('pdfMergeMode').style.display=mode==='merge'?'block':'none';document.getElementById('pdfSplitMode').style.display=mode==='split'?'block':'none';document.getElementById('pdfTabMerge').className=mode==='merge'?'btn small-btn':'btn btn-outline small-btn';document.getElementById('pdfTabSplit').className=mode==='split'?'btn small-btn':'btn btn-outline small-btn';[document.getElementById('pdfTabMerge'),document.getElementById('pdfTabSplit')].forEach(b=>b.style.borderRadius='999px');}
-
-// Render single PDF page to canvas at given scale (non-blocking via RAF)
-async function pdfRenderPage(pdf, pageNum, scale=0.18){
-  const page=await pdf.getPage(pageNum),vp=page.getViewport({scale}),cv=document.createElement('canvas');
-  cv.width=vp.width;cv.height=vp.height;
-  await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-  return cv;
+/* ===== PDF TOOLS v2 (progress + reorder + multi-split + compress) ===== */
+function pdfShowMode(mode){
+  ['merge','split','compress'].forEach(m=>{
+    document.getElementById('pdf'+m.charAt(0).toUpperCase()+m.slice(1)+'Mode').style.display=(m===mode)?'block':'none';
+    const tab=document.getElementById('pdfTab'+m.charAt(0).toUpperCase()+m.slice(1));
+    tab.className=(m===mode)?'btn small-btn':'btn btn-outline small-btn';
+    tab.style.borderRadius='999px';
+  });
 }
-
-// --- MERGE (show first 3 pages per file, very fast) ---
-let mergeFiles=[];
-async function loadMergeFiles(){
-  mergeFiles=Array.from(document.getElementById('mergeInput').files);
-  const prev=document.getElementById('mergePreview'),st=document.getElementById('mergeStatus');
-  document.getElementById('btnMerge').disabled=mergeFiles.length<2;
-  document.getElementById('mergeList').innerHTML=mergeFiles.length?mergeFiles.length+' file dipilih':'';
-  prev.innerHTML=''; st.innerText='';
-  if(mergeFiles.length===1){st.innerText='Minimal 2 file untuk digabung.';return;}
-  for(let fi=0;fi<mergeFiles.length;fi++){
-    const file=mergeFiles[fi];
-    const wrap=document.createElement('div');wrap.className='pdf-mergefile';
-    wrap.innerHTML='<div class="mf-head"><span>'+(fi+1)+'. '+file.name+'</span><span style="color:var(--text-muted);font-size:11px;" id="mf-info-'+fi+'">memuat...</span></div>';
-    const thumbs=document.createElement('div');thumbs.className='mf-thumbs';wrap.appendChild(thumbs);prev.appendChild(wrap);
-    // Render async — don't await, show file immediately then paint thumbs
-    (async()=>{
-      try{
-        const ab=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise;
-        const info=document.getElementById('mf-info-'+fi);
-        if(info) info.textContent=pdf.numPages+' hal';
-        const maxShow=Math.min(pdf.numPages,3); // Only first 3 pages
-        for(let p=1;p<=maxShow;p++){
-          const cv=await pdfRenderPage(pdf,p,0.16);
-          thumbs.appendChild(cv);
-        }
-        if(pdf.numPages>3){const m=document.createElement('div');m.style.cssText='display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;min-width:50px;';m.textContent='+'+(pdf.numPages-3)+' hal';thumbs.appendChild(m);}
-      }catch(e){console.error(e);}
-    })();
-  }
-}
-async function mergePDF(){const st=document.getElementById('mergeStatus');st.innerText='Menggabungkan...';try{const merged=await PDFLib.PDFDocument.create();for(const file of mergeFiles){const bytes=await file.arrayBuffer(),doc=await PDFLib.PDFDocument.load(bytes),pages=await merged.copyPages(doc,doc.getPageIndices());pages.forEach(p=>merged.addPage(p));}const out=await merged.save();dlBlob(out,'Gabungan.pdf');st.innerText='Berhasil digabung!';}catch(e){console.error(e);st.innerText='Gagal.';}}
-
-// --- SPLIT (batch render in chunks to avoid blocking) ---
-let splitFile=null, splitSelected=new Set(), splitTotalPages=0, splitPdfRef=null;
-async function loadSplitFile(){
-  splitFile=document.getElementById('splitInput').files[0]||null;
-  const prev=document.getElementById('splitPreview'),nameEl=document.getElementById('splitName');
-  splitSelected.clear();prev.innerHTML='';document.getElementById('btnSplit').disabled=true;splitPdfRef=null;
-  if(!splitFile){nameEl.innerText='';return;}
-  nameEl.innerText=splitFile.name;
-  document.getElementById('splitHint').style.display='block';
-  document.getElementById('splitActions').style.display='flex';
-  const st=document.getElementById('splitStatus');st.innerText='Membaca PDF...';
-  try{
-    const ab=await splitFile.arrayBuffer();
-    const pdf=await pdfjsLib.getDocument({data:ab}).promise;
-    splitPdfRef=pdf; splitTotalPages=pdf.numPages;
-    st.innerText='Merender '+pdf.numPages+' halaman...';
-    // Render in batches of 5 so UI stays responsive
-    const BATCH=5;
-    for(let p=1;p<=pdf.numPages;p++){
-      const cv=await pdfRenderPage(pdf,p,0.22);
-      const div=document.createElement('div');div.className='pdf-thumb';div.dataset.page=p;
-      div.innerHTML='<div class="pnum">'+p+'</div>';div.insertBefore(cv,div.firstChild);
-      div.onclick=()=>toggleSplitPage(p,div);prev.appendChild(div);
-      // Yield to browser every batch to keep UI responsive
-      if(p%BATCH===0) await new Promise(r=>setTimeout(r,0));
-      st.innerText='Merender... '+p+'/'+pdf.numPages+' hal';
-    }
-    st.innerText=pdf.numPages+' halaman siap. Klik untuk memilih.';
-  }catch(e){console.error(e);document.getElementById('splitStatus').innerText='Gagal memuat PDF.';}
-}
-function toggleSplitPage(p,div){if(splitSelected.has(p)){splitSelected.delete(p);div.classList.remove('selected');}else{splitSelected.add(p);div.classList.add('selected');}document.getElementById('btnSplit').disabled=splitSelected.size===0;document.getElementById('splitStatus').innerText=splitSelected.size+' halaman dipilih.';}
-function splitSelectAll(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>{const p=parseInt(d.dataset.page);splitSelected.add(p);d.classList.add('selected');});document.getElementById('btnSplit').disabled=false;document.getElementById('splitStatus').innerText=splitSelected.size+' halaman dipilih.';}
-function splitSelectNone(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>d.classList.remove('selected'));splitSelected.clear();document.getElementById('btnSplit').disabled=true;document.getElementById('splitStatus').innerText='0 halaman dipilih.';}
-async function splitPDF(){const st=document.getElementById('splitStatus');if(!splitFile||splitSelected.size===0)return;st.innerText='Memproses...';try{const idx=[...splitSelected].sort((a,b)=>a-b).map(p=>p-1);const bytes=await splitFile.arrayBuffer(),src=await PDFLib.PDFDocument.load(bytes),out=await PDFLib.PDFDocument.create(),pages=await out.copyPages(src,idx);pages.forEach(p=>out.addPage(p));const bo=await out.save();dlBlob(bo,'Halaman_Terpilih.pdf');st.innerText=idx.length+' halaman diekstrak!';}catch(e){console.error(e);st.innerText='Gagal.';}}
+async function pdfRenderPage(pdf,pageNum,scale){const page=await pdf.getPage(pageNum),vp=page.getViewport({scale}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;return cv;}
 function dlBlob(bytes,fn){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));a.download=fn;a.click();}
+
+/* --- MERGE with drag-reorder --- */
+let mergeItems=[]; // {file, name, pages, thumbDataUrl}
+async function loadMergeFiles(){
+  const files=Array.from(document.getElementById('mergeInput').files);
+  const prog=document.getElementById('mergeProgress'),bar=document.getElementById('mergeProgressBar'),st=document.getElementById('mergeStatus');
+  document.getElementById('btnMerge').disabled=true;
+  document.getElementById('mergeList').innerHTML=files.length+' file dipilih';
+  document.getElementById('mergePreview').innerHTML='';
+  mergeItems=[];
+  if(files.length<2){st.innerText=files.length===1?'Minimal 2 file untuk digabung.':'';return;}
+  prog.style.display='block';bar.style.width='0%';st.innerText='Membaca file...';
+  for(let i=0;i<files.length;i++){
+    const file=files[i];
+    let pages=0,thumb='';
+    try{
+      const ab=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+      pages=pdf.numPages;
+      const cv=await pdfRenderPage(pdf,1,0.15);
+      thumb=cv.toDataURL('image/jpeg',0.6);
+    }catch(e){console.error(e);}
+    mergeItems.push({file,name:file.name,pages,thumb});
+    bar.style.width=Math.round((i+1)/files.length*100)+'%';
+    st.innerText='Membaca '+(i+1)+'/'+files.length;
+  }
+  prog.style.display='none';st.innerText='';
+  document.getElementById('mergeReorderHint').style.display='block';
+  document.getElementById('btnMerge').disabled=false;
+  renderMergeList();
+}
+function renderMergeList(){
+  const prev=document.getElementById('mergePreview');
+  prev.innerHTML=mergeItems.map((it,idx)=>`
+    <div class="pdf-merge-item" draggable="true" data-idx="${idx}"
+      ondragstart="mergeDragStart(event,${idx})" ondragover="mergeDragOver(event,${idx})"
+      ondrop="mergeDrop(event,${idx})" ondragend="mergeDragEnd(event)">
+      <span class="pdf-merge-handle">⠿</span>
+      <span class="pdf-merge-order">${idx+1}</span>
+      ${it.thumb?`<img class="pdf-merge-thumb" src="${it.thumb}">`:'<div class="pdf-merge-thumb"></div>'}
+      <div style="flex:1;min-width:0;"><div class="pdf-merge-name">${it.name.replace(/</g,'&lt;')}</div><div class="pdf-merge-pages">${it.pages} halaman</div></div>
+    </div>`).join('');
+}
+let mergeDragIdx=null;
+function mergeDragStart(e,idx){mergeDragIdx=idx;e.currentTarget.classList.add('dragging');}
+function mergeDragOver(e,idx){e.preventDefault();e.currentTarget.classList.add('dragover');}
+function mergeDrop(e,idx){e.preventDefault();document.querySelectorAll('.pdf-merge-item').forEach(el=>el.classList.remove('dragover'));if(mergeDragIdx===null||mergeDragIdx===idx)return;const moved=mergeItems.splice(mergeDragIdx,1)[0];mergeItems.splice(idx,0,moved);renderMergeList();}
+function mergeDragEnd(e){e.currentTarget.classList.remove('dragging');document.querySelectorAll('.pdf-merge-item').forEach(el=>el.classList.remove('dragover'));mergeDragIdx=null;}
+async function mergePDF(){
+  const st=document.getElementById('mergeStatus'),prog=document.getElementById('mergeProgress'),bar=document.getElementById('mergeProgressBar');
+  prog.style.display='block';bar.style.width='0%';st.innerText='Menggabungkan...';
+  try{
+    const merged=await PDFLib.PDFDocument.create();
+    for(let i=0;i<mergeItems.length;i++){
+      const bytes=await mergeItems[i].file.arrayBuffer();
+      const doc=await PDFLib.PDFDocument.load(bytes);
+      const pages=await merged.copyPages(doc,doc.getPageIndices());
+      pages.forEach(p=>merged.addPage(p));
+      bar.style.width=Math.round((i+1)/mergeItems.length*100)+'%';
+    }
+    const out=await merged.save();dlBlob(out,'Gabungan.pdf');
+    st.innerText='✅ Berhasil digabung!';
+  }catch(e){console.error(e);st.innerText='❌ Gagal.';}
+  setTimeout(()=>prog.style.display='none',800);
+}
+
+/* --- SPLIT multi-file --- */
+let splitFiles=[]; // {file, name, numPages}
+let splitSelected=new Set(); // key: "fileIdx:pageNum"
+async function loadSplitFiles(){
+  splitFiles=Array.from(document.getElementById('splitInput').files);
+  splitSelected.clear();
+  const prog=document.getElementById('splitProgress'),bar=document.getElementById('splitProgressBar');
+  const prev=document.getElementById('splitPreview'),ls=document.getElementById('splitLoadStatus');
+  prev.innerHTML='';document.getElementById('btnSplit').disabled=true;
+  document.getElementById('splitActions').style.display='none';
+  if(!splitFiles.length)return;
+  prog.style.display='block';bar.style.width='0%';
+  // Count total pages first
+  let totalPages=0; const pdfs=[];
+  for(const f of splitFiles){const ab=await f.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;pdfs.push(pdf);totalPages+=pdf.numPages;}
+  let done=0;
+  for(let fi=0;fi<splitFiles.length;fi++){
+    const pdf=pdfs[fi];
+    const group=document.createElement('div');group.className='pdf-split-filegroup';
+    group.innerHTML=`<div class="pdf-split-filehead">📄 ${splitFiles[fi].name.replace(/</g,'&lt;')} (${pdf.numPages} hal)</div>`;
+    const grid=document.createElement('div');grid.className='pdf-split-grid';group.appendChild(grid);prev.appendChild(group);
+    for(let p=1;p<=pdf.numPages;p++){
+      const cv=await pdfRenderPage(pdf,p,0.2);
+      const key=fi+':'+p;
+      const div=document.createElement('div');div.className='pdf-thumb';div.dataset.key=key;
+      div.innerHTML='<div class="pnum">'+p+'</div>';div.insertBefore(cv,div.firstChild);
+      div.onclick=()=>toggleSplitPage(key,div);grid.appendChild(div);
+      done++;bar.style.width=Math.round(done/totalPages*100)+'%';
+      ls.innerText='Merender '+done+'/'+totalPages+' halaman...';
+      if(done%4===0)await new Promise(r=>setTimeout(r,0));
+    }
+  }
+  prog.style.display='none';ls.innerText=totalPages+' halaman dari '+splitFiles.length+' file siap.';
+  document.getElementById('splitActions').style.display='flex';
+  window._splitPdfs=pdfs; // keep refs
+}
+function toggleSplitPage(key,div){if(splitSelected.has(key)){splitSelected.delete(key);div.classList.remove('selected');}else{splitSelected.add(key);div.classList.add('selected');}updateSplitCount();}
+function updateSplitCount(){document.getElementById('btnSplit').disabled=splitSelected.size===0;document.getElementById('splitSelCount').innerText=splitSelected.size+' dipilih';}
+function splitSelectAll(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>{splitSelected.add(d.dataset.key);d.classList.add('selected');});updateSplitCount();}
+function splitSelectNone(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>d.classList.remove('selected'));splitSelected.clear();updateSplitCount();}
+async function splitPDF(){
+  const st=document.getElementById('splitStatus');if(splitSelected.size===0)return;
+  st.innerText='Memproses...';
+  try{
+    const out=await PDFLib.PDFDocument.create();
+    // Group selected by file, load each file's PDFLib doc once
+    const byFile={};
+    [...splitSelected].forEach(key=>{const[fi,p]=key.split(':').map(Number);(byFile[fi]=byFile[fi]||[]).push(p);});
+    for(const fi of Object.keys(byFile).sort((a,b)=>a-b)){
+      const bytes=await splitFiles[fi].arrayBuffer();
+      const src=await PDFLib.PDFDocument.load(bytes);
+      const idx=byFile[fi].sort((a,b)=>a-b).map(p=>p-1);
+      const pages=await out.copyPages(src,idx);
+      pages.forEach(p=>out.addPage(p));
+    }
+    const bo=await out.save();dlBlob(bo,'Halaman_Terpilih.pdf');
+    st.innerText='✅ '+splitSelected.size+' halaman diekstrak!';
+  }catch(e){console.error(e);st.innerText='❌ Gagal.';}
+}
+
+/* --- COMPRESS PDF (rasterize pages at lower quality) --- */
+let compressFile=null;
+function loadCompressFile(){compressFile=document.getElementById('compressInput').files[0]||null;document.getElementById('compressName').innerText=compressFile?compressFile.name:'';document.getElementById('btnCompress').disabled=!compressFile;document.getElementById('compressStatus').innerText='';}
+async function compressPDF(){
+  if(!compressFile)return;
+  const st=document.getElementById('compressStatus'),prog=document.getElementById('compressProgress'),bar=document.getElementById('compressProgressBar');
+  const quality=parseFloat(document.getElementById('compressLevel').value);
+  prog.style.display='block';bar.style.width='0%';st.innerText='Membaca PDF...';
+  try{
+    const origSize=compressFile.size;
+    const ab=await compressFile.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+    const out=await PDFLib.PDFDocument.create();
+    const scale=quality<0.2?1.0:(quality<0.4?1.3:1.6);
+    for(let p=1;p<=pdf.numPages;p++){
+      const cv=await pdfRenderPage(pdf,p,scale);
+      const jpg=cv.toDataURL('image/jpeg',quality);
+      const jpgBytes=await fetch(jpg).then(r=>r.arrayBuffer());
+      const img=await out.embedJpg(jpgBytes);
+      const page=out.addPage([cv.width,cv.height]);
+      page.drawImage(img,{x:0,y:0,width:cv.width,height:cv.height});
+      bar.style.width=Math.round(p/pdf.numPages*100)+'%';
+      st.innerText='Mengompres halaman '+p+'/'+pdf.numPages;
+      if(p%2===0)await new Promise(r=>setTimeout(r,0));
+    }
+    const outBytes=await out.save();
+    const newSize=outBytes.length;
+    const saved=Math.round((1-newSize/origSize)*100);
+    dlBlob(outBytes,compressFile.name.replace(/\.pdf$/i,'')+'_compressed.pdf');
+    st.innerText=`✅ Selesai! ${(origSize/1024/1024).toFixed(2)}MB → ${(newSize/1024/1024).toFixed(2)}MB (${saved>0?'-'+saved+'%':'tidak berkurang'})`;
+  }catch(e){console.error(e);st.innerText='❌ Gagal mengompres.';}
+  setTimeout(()=>prog.style.display='none',800);
+}
+
 
 /* ===== PDF TO WORD ===== */
 let pdfWordFile=null;
@@ -1161,7 +1310,7 @@ create policy "update_read" on direct_messages for update using (auth.uid()=rece
 */
 
 let chatOpen=false, chatMyId=null, chatMyName='', chatPeerId=null, chatPeerName='';
-let chatUsers=[], chatMessages=[], chatUnreadByUser={}, chatSub=null, chatInited=false;
+let chatUsers=[], chatMessages=[], chatUnreadByUser={}, chatSub=null, chatInited=false, chatPollTimer=null;
 
 async function chatInit(userId, name){
   if(chatInited) return;
@@ -1184,31 +1333,55 @@ async function chatInit(userId, name){
   // 3. Load unread counts
   await chatLoadUnread();
 
-  // 4. Subscribe to incoming DMs (realtime)
-  chatSub=sb.channel('dm_channel')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages',filter:'receiver_id=eq.'+userId},payload=>{
-      const m=payload.new;
-      // If currently chatting with sender, append + mark read
-      if(chatPeerId && m.sender_id===chatPeerId){
-        chatMessages.push(m);
-        chatRenderMsgs();
-        chatMarkRead(chatPeerId);
-      }else{
-        // increment unread for that sender
-        chatUnreadByUser[m.sender_id]=(chatUnreadByUser[m.sender_id]||0)+1;
-        chatUpdateTotalBadge();
-        chatRenderUsers();
-      }
+  // 4. Subscribe to ALL direct_messages changes (realtime), filter client-side
+  chatSub=sb.channel('dm_realtime_'+userId)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages'},payload=>{
+      chatHandleIncoming(payload.new);
     })
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages',filter:'sender_id=eq.'+userId},payload=>{
-      // My own message sent from another device — reflect it
-      const m=payload.new;
-      if(chatPeerId && m.receiver_id===chatPeerId){
-        // avoid duplicate (already added optimistically)
-        if(!chatMessages.some(x=>x.id===m.id)){chatMessages.push(m);chatRenderMsgs();}
-      }
-    })
-    .subscribe();
+    .subscribe((status)=>{
+      console.log('Chat realtime status:',status);
+    });
+
+  // 5. Polling fallback (every 4s) in case realtime is not enabled in Supabase
+  if(chatPollTimer) clearInterval(chatPollTimer);
+  chatPollTimer=setInterval(chatPoll, 4000);
+}
+
+// Central handler for any new message (from realtime OR polling)
+function chatHandleIncoming(m){
+  if(!m) return;
+  const involvesMe = (m.receiver_id===chatMyId || m.sender_id===chatMyId);
+  if(!involvesMe) return;
+  // Avoid duplicates (optimistic or already loaded)
+  if(chatMessages.some(x=>String(x.id)===String(m.id))) return;
+
+  const peerOfMsg = m.sender_id===chatMyId ? m.receiver_id : m.sender_id;
+
+  // If this message belongs to the currently-open conversation → append live
+  if(chatPeerId && peerOfMsg===chatPeerId){
+    chatMessages.push(m);
+    chatRenderMsgs();
+    // If I'm the receiver, mark as read since chat is open
+    if(m.receiver_id===chatMyId) chatMarkRead(chatPeerId);
+  } else if(m.receiver_id===chatMyId){
+    // Incoming to me but different/closed conversation → bump unread
+    chatUnreadByUser[m.sender_id]=(chatUnreadByUser[m.sender_id]||0)+1;
+    chatUpdateTotalBadge();
+    chatRenderUsers(document.getElementById('chatSearch')?.value||'');
+  }
+}
+
+// Polling fallback: fetch recent messages involving me
+let chatLastPollTime=null;
+async function chatPoll(){
+  if(!chatMyId) return;
+  try{
+    let q=sb.from('direct_messages').select('*')
+      .or(`sender_id.eq.${chatMyId},receiver_id.eq.${chatMyId}`)
+      .order('created_at',{ascending:true}).limit(30);
+    const {data}=await q;
+    if(data) data.forEach(m=>chatHandleIncoming(m));
+  }catch(e){/* silent */}
 }
 
 async function chatLoadUsers(){
