@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Super Tools Pro — Portal</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='13' fill='%2300C076'/%3E%3Ccircle cx='50' cy='21' r='9' fill='%23FF6B35'/%3E%3Ccircle cx='77' cy='36' r='9' fill='%23FF6B35'/%3E%3Ccircle cx='77' cy='64' r='9' fill='%23FF6B35'/%3E%3Ccircle cx='23' cy='36' r='9' fill='%23FF6B35'/%3E%3Ccircle cx='23' cy='64' r='9' fill='%23FF6B35'/%3E%3Ccircle cx='50' cy='79' r='9' fill='%23FF6B35'/%3E%3Cline x1='50' y1='50' x2='50' y2='21' stroke='%2300C076' stroke-width='3'/%3E%3Cline x1='50' y1='50' x2='77' y2='36' stroke='%23FF6B35' stroke-width='3'/%3E%3Cline x1='50' y1='50' x2='77' y2='64' stroke='%23FF6B35' stroke-width='3'/%3E%3Cline x1='50' y1='50' x2='23' y2='36' stroke='%23FF6B35' stroke-width='3'/%3E%3Cline x1='50' y1='50' x2='23' y2='64' stroke='%23FF6B35' stroke-width='3'/%3E%3Cline x1='50' y1='50' x2='50' y2='79' stroke='%2300C076' stroke-width='3'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -89,7 +90,45 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 .pdf-mergefile .mf-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:8px}
 .pdf-mergefile .mf-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
 .pdf-mergefile .mf-thumbs canvas{width:100%;border:1px solid var(--border);border-radius:4px}
-/* ===== FINANCE TRACKER ===== */
+/* ===== LOADING OVERLAY ===== */
+#initLoading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;transition:opacity .3s}
+#initLoading.hide{opacity:0;pointer-events:none}
+.spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#initLoading p{color:var(--text-muted);font-size:14px;font-weight:600}
+
+/* ===== CHAT ===== */
+.chat-fab{position:fixed;bottom:28px;right:28px;width:52px;height:52px;border-radius:50%;background:var(--primary);color:#04130C;border:none;cursor:pointer;font-size:22px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(0,192,118,0.45);z-index:400;transition:.2s}
+.chat-fab.show{display:flex}.chat-fab:hover{transform:scale(1.1)}
+.chat-badge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 4px;background:var(--danger);color:#fff;border-radius:9px;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center}
+.chat-badge.show{display:flex}
+.chat-panel{position:fixed;bottom:94px;right:28px;width:340px;max-width:calc(100vw - 40px);height:500px;background:var(--card-bg);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;z-index:400;transform:translateY(20px) scale(0.95);opacity:0;pointer-events:none;transition:.25s cubic-bezier(.34,1.56,.64,1)}
+.chat-panel.open{transform:none;opacity:1;pointer-events:all}
+.chat-header{padding:14px 18px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.chat-header h3{font-size:14px;font-weight:800;margin:0}
+.chat-header-right{display:flex;align-items:center;gap:10px}
+.chat-online{font-size:11px;color:var(--success);font-weight:700}
+.chat-close{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
+.chat-msg{display:flex;flex-direction:column;gap:3px;max-width:82%}
+.chat-msg.mine{align-self:flex-end;align-items:flex-end}
+.chat-msg.theirs{align-self:flex-start}
+.chat-bubble{padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word}
+.chat-msg.mine .chat-bubble{background:var(--primary);color:#04130C;border-bottom-right-radius:4px;font-weight:500}
+.chat-msg.theirs .chat-bubble{background:var(--card-2);border:1px solid var(--border-soft);border-bottom-left-radius:4px}
+.chat-meta{font-size:10px;color:var(--text-muted);font-weight:600}
+.chat-sender{font-size:11px;color:var(--primary);font-weight:700;margin-bottom:1px}
+.chat-input-row{padding:12px;border-top:1px solid var(--border-soft);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;padding:10px 13px;border-radius:12px;border:1px solid var(--border);background:var(--input-bg);color:var(--text-main);font:inherit;font-size:13px;outline:none;resize:none;transition:.15s;line-height:1.4}
+.chat-input:focus{border-color:var(--primary)}
+.chat-send{width:40px;height:40px;border-radius:11px;background:var(--primary);color:#04130C;border:none;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;font-weight:800}
+.chat-send:hover{background:var(--primary-hover)}.chat-send:disabled{opacity:.5;cursor:not-allowed}
+.chat-day-divider{text-align:center;font-size:11px;color:var(--text-muted);font-weight:600;margin:4px 0}
+.chat-empty-msg{text-align:center;color:var(--text-muted);font-size:13px;padding:30px 16px;line-height:1.6}
+/* ===== PDF thumb size fix ===== */
+.pdf-mergefile .mf-thumbs canvas{max-height:90px;object-fit:cover}
+.pdf-thumb canvas{max-height:160px}
+</style>
 .fin-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
 .fin-stat{background:var(--card-2);border:1px solid var(--border-soft);border-radius:14px;padding:18px 20px}
 .fin-stat .fs-label{font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
@@ -111,8 +150,14 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 </style>
 </head>
 <body>
+<!-- LOADING OVERLAY - shows while Supabase checks auth -->
+<div id="initLoading">
+<div class="spin"></div>
+<p>Memuat Super Tools Pro...</p>
+</div>
+
 <!-- AUTH SCREEN -->
-<div id="authScreen">
+<div id="authScreen" style="display:none;">
 <div class="auth-card">
 <div class="logo"><h1><span class="dot">⚡</span> Super Tools <span class="pro">PRO</span></h1><p style="color:var(--text-muted);font-size:13px;margin-top:8px;">Portal tools untuk pekerja profesional</p></div>
 <p style="text-align:center;color:var(--text-muted);font-size:14px;margin:24px 0 20px;line-height:1.6;">Masuk atau daftar dengan akun Google Anda untuk mengakses semua tools.</p>
@@ -140,6 +185,7 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 <div class="sidebar-item" onclick="goPage('fin-transaksi',this);finOnPageOpen()"><span class="icon">💳</span> Transaksi</div>
 <div class="sidebar-item" onclick="goPage('fin-master',this);finOnPageOpen()"><span class="icon">⚙️</span> Master Data</div>
 <div class="sidebar-section">Utilitas</div>
+<div class="sidebar-item" onclick="toggleChat()"><span class="icon">💬</span> Team Chat</div>
 <div class="sidebar-item" onclick="goPage('percentage-calc',this)"><span class="icon">🔢</span> Percentage Calc</div>
 <div class="sidebar-item" onclick="goPage('date-calc',this)"><span class="icon">📅</span> Tanggal & Denda</div>
 <div class="sidebar-item" onclick="goPage('smart-ocr',this)"><span class="icon">👁️</span> Smart OCR</div>
@@ -154,6 +200,24 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 </div>
 </nav>
 <div class="main-content">
+
+<!-- CHAT FLOATING BUTTON + PANEL -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" title="Chat antar user">
+  💬<span class="chat-badge" id="chatBadge">0</span>
+</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div><h3>💬 Team Chat</h3><div class="chat-online" id="chatOnline">● Online</div></div>
+    <div class="chat-header-right">
+      <button class="chat-close" onclick="toggleChat()" title="Tutup">✕</button>
+    </div>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"><div class="chat-empty-msg">Memuat pesan...</div></div>
+  <div class="chat-input-row">
+    <textarea class="chat-input" id="chatInput" placeholder="Tulis pesan..." rows="1" onkeydown="chatKeydown(event)" oninput="chatAutoResize(this)"></textarea>
+    <button class="chat-send" id="chatSendBtn" onclick="chatSend()" title="Kirim">➤</button>
+  </div>
+</div>
 <!-- LOAN CALCULATOR -->
 <div id="loan-calculator" class="page active"><div class="card"><h2>Simulasi Angsuran Pinjaman</h2><div class="grid"><div>
 <div class="form-group"><label>Pokok Pinjaman (Rp)</label><input type="text" id="pokok" value="500.000.000" oninput="formatInputUang(this)"></div>
@@ -419,18 +483,25 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
 });
 
 function showAuth() {
+  const il = document.getElementById('initLoading');
+  if (il) { il.classList.add('hide'); setTimeout(()=>il.style.display='none',300); }
   document.getElementById('authScreen').style.display = 'flex';
   document.getElementById('appLayout').classList.remove('show');
+  document.querySelector('.chat-fab')?.classList.remove('show');
 }
 
-// Single handler for ALL auth transitions — including Google OAuth redirect
+// Only show login after INITIAL_SESSION confirms no user — prevents flicker
+let authResolved = false;
 sb.auth.onAuthStateChange((event, session) => {
-  if (session && session.user) {
+  if (session?.user) {
+    const il = document.getElementById('initLoading');
+    if (il) { il.classList.add('hide'); setTimeout(()=>il.style.display='none',300); }
     const u = session.user;
     const name = u.user_metadata?.full_name || u.user_metadata?.name || u.email.split('@')[0];
     enterApp(name, u.email);
-  } else {
-    // covers: SIGNED_OUT, no session on load, token expired
+    authResolved = true;
+  } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+    authResolved = true;
     showAuth();
   }
 });
@@ -454,7 +525,12 @@ function enterApp(name, email) {
   document.getElementById('userName').textContent=name;
   document.getElementById('userEmail').textContent=email;
   document.getElementById('userAvatar').textContent=name.charAt(0).toUpperCase();
+  document.querySelector('.chat-fab')?.classList.add('show');
   initTools();
+  // Init chat with user info
+  sb.auth.getSession().then(({data:{session}})=>{
+    if(session) chatInit(session.user.id, name);
+  });
 }
 
 async function doLogout() {
@@ -586,22 +662,81 @@ async function transcribeVoiceFile(){
   btn.disabled=false;
 }
 
-/* ===== PDF TOOLS (with preview) ===== */
-function pdfShowMode(mode,btn){document.getElementById('pdfMergeMode').style.display=mode==='merge'?'block':'none';document.getElementById('pdfSplitMode').style.display=mode==='split'?'block':'none';document.getElementById('pdfTabMerge').className=mode==='merge'?'btn small-btn':'btn btn-outline small-btn';document.getElementById('pdfTabSplit').className=mode==='split'?'btn small-btn':'btn btn-outline small-btn';[document.getElementById('pdfTabMerge'),document.getElementById('pdfTabSplit')].forEach(b=>b.style.borderRadius='999px');}
+/* ===== PDF TOOLS (optimized thumbnails) ===== */
+function pdfShowMode(mode){document.getElementById('pdfMergeMode').style.display=mode==='merge'?'block':'none';document.getElementById('pdfSplitMode').style.display=mode==='split'?'block':'none';document.getElementById('pdfTabMerge').className=mode==='merge'?'btn small-btn':'btn btn-outline small-btn';document.getElementById('pdfTabSplit').className=mode==='split'?'btn small-btn':'btn btn-outline small-btn';[document.getElementById('pdfTabMerge'),document.getElementById('pdfTabSplit')].forEach(b=>b.style.borderRadius='999px');}
 
-// --- MERGE with thumbnails ---
+// Render single PDF page to canvas at given scale (non-blocking via RAF)
+async function pdfRenderPage(pdf, pageNum, scale=0.18){
+  const page=await pdf.getPage(pageNum),vp=page.getViewport({scale}),cv=document.createElement('canvas');
+  cv.width=vp.width;cv.height=vp.height;
+  await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+  return cv;
+}
+
+// --- MERGE (show first 3 pages per file, very fast) ---
 let mergeFiles=[];
-async function loadMergeFiles(){mergeFiles=Array.from(document.getElementById('mergeInput').files);const list=document.getElementById('mergeList'),prev=document.getElementById('mergePreview');document.getElementById('btnMerge').disabled=mergeFiles.length<2;list.innerHTML=mergeFiles.length?(mergeFiles.length+' file dipilih'):'';prev.innerHTML='';if(mergeFiles.length===1)document.getElementById('mergeStatus').innerText='Minimal 2 file untuk digabung.';else document.getElementById('mergeStatus').innerText='';
-for(let fi=0;fi<mergeFiles.length;fi++){const file=mergeFiles[fi];const wrap=document.createElement('div');wrap.className='pdf-mergefile';wrap.innerHTML='<div class="mf-head"><span>'+(fi+1)+'. '+file.name+'</span></div>';const thumbs=document.createElement('div');thumbs.className='mf-thumbs';wrap.appendChild(thumbs);prev.appendChild(wrap);
-try{const ab=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise;const maxShow=Math.min(pdf.numPages,6);for(let p=1;p<=maxShow;p++){const page=await pdf.getPage(p),vp=page.getViewport({scale:0.3}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;thumbs.appendChild(cv);}if(pdf.numPages>6){const more=document.createElement('div');more.style.cssText='display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px;';more.textContent='+'+(pdf.numPages-6)+' hal';thumbs.appendChild(more);}}catch(e){console.error(e);}}}
+async function loadMergeFiles(){
+  mergeFiles=Array.from(document.getElementById('mergeInput').files);
+  const prev=document.getElementById('mergePreview'),st=document.getElementById('mergeStatus');
+  document.getElementById('btnMerge').disabled=mergeFiles.length<2;
+  document.getElementById('mergeList').innerHTML=mergeFiles.length?mergeFiles.length+' file dipilih':'';
+  prev.innerHTML=''; st.innerText='';
+  if(mergeFiles.length===1){st.innerText='Minimal 2 file untuk digabung.';return;}
+  for(let fi=0;fi<mergeFiles.length;fi++){
+    const file=mergeFiles[fi];
+    const wrap=document.createElement('div');wrap.className='pdf-mergefile';
+    wrap.innerHTML='<div class="mf-head"><span>'+(fi+1)+'. '+file.name+'</span><span style="color:var(--text-muted);font-size:11px;" id="mf-info-'+fi+'">memuat...</span></div>';
+    const thumbs=document.createElement('div');thumbs.className='mf-thumbs';wrap.appendChild(thumbs);prev.appendChild(wrap);
+    // Render async — don't await, show file immediately then paint thumbs
+    (async()=>{
+      try{
+        const ab=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise;
+        const info=document.getElementById('mf-info-'+fi);
+        if(info) info.textContent=pdf.numPages+' hal';
+        const maxShow=Math.min(pdf.numPages,3); // Only first 3 pages
+        for(let p=1;p<=maxShow;p++){
+          const cv=await pdfRenderPage(pdf,p,0.16);
+          thumbs.appendChild(cv);
+        }
+        if(pdf.numPages>3){const m=document.createElement('div');m.style.cssText='display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;min-width:50px;';m.textContent='+'+(pdf.numPages-3)+' hal';thumbs.appendChild(m);}
+      }catch(e){console.error(e);}
+    })();
+  }
+}
 async function mergePDF(){const st=document.getElementById('mergeStatus');st.innerText='Menggabungkan...';try{const merged=await PDFLib.PDFDocument.create();for(const file of mergeFiles){const bytes=await file.arrayBuffer(),doc=await PDFLib.PDFDocument.load(bytes),pages=await merged.copyPages(doc,doc.getPageIndices());pages.forEach(p=>merged.addPage(p));}const out=await merged.save();dlBlob(out,'Gabungan.pdf');st.innerText='Berhasil digabung!';}catch(e){console.error(e);st.innerText='Gagal.';}}
 
-// --- SPLIT with clickable page thumbnails ---
-let splitFile=null, splitSelected=new Set(), splitTotalPages=0;
-async function loadSplitFile(){splitFile=document.getElementById('splitInput').files[0]||null;const prev=document.getElementById('splitPreview'),name=document.getElementById('splitName');splitSelected.clear();prev.innerHTML='';document.getElementById('btnSplit').disabled=true;if(!splitFile){name.innerText='';return;}name.innerText=splitFile.name;document.getElementById('splitHint').style.display='block';document.getElementById('splitActions').style.display='flex';document.getElementById('splitStatus').innerText='Merender halaman...';
-try{const ab=await splitFile.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:ab}).promise;splitTotalPages=pdf.numPages;for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),vp=page.getViewport({scale:0.5}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;const div=document.createElement('div');div.className='pdf-thumb';div.dataset.page=p;div.innerHTML='<div class="pnum">Hal '+p+'</div>';div.insertBefore(cv,div.firstChild);div.onclick=()=>toggleSplitPage(p,div);prev.appendChild(div);}document.getElementById('splitStatus').innerText=pdf.numPages+' halaman. Klik untuk memilih.';}catch(e){console.error(e);document.getElementById('splitStatus').innerText='Gagal memuat PDF.';}}
+// --- SPLIT (batch render in chunks to avoid blocking) ---
+let splitFile=null, splitSelected=new Set(), splitTotalPages=0, splitPdfRef=null;
+async function loadSplitFile(){
+  splitFile=document.getElementById('splitInput').files[0]||null;
+  const prev=document.getElementById('splitPreview'),nameEl=document.getElementById('splitName');
+  splitSelected.clear();prev.innerHTML='';document.getElementById('btnSplit').disabled=true;splitPdfRef=null;
+  if(!splitFile){nameEl.innerText='';return;}
+  nameEl.innerText=splitFile.name;
+  document.getElementById('splitHint').style.display='block';
+  document.getElementById('splitActions').style.display='flex';
+  const st=document.getElementById('splitStatus');st.innerText='Membaca PDF...';
+  try{
+    const ab=await splitFile.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+    splitPdfRef=pdf; splitTotalPages=pdf.numPages;
+    st.innerText='Merender '+pdf.numPages+' halaman...';
+    // Render in batches of 5 so UI stays responsive
+    const BATCH=5;
+    for(let p=1;p<=pdf.numPages;p++){
+      const cv=await pdfRenderPage(pdf,p,0.22);
+      const div=document.createElement('div');div.className='pdf-thumb';div.dataset.page=p;
+      div.innerHTML='<div class="pnum">'+p+'</div>';div.insertBefore(cv,div.firstChild);
+      div.onclick=()=>toggleSplitPage(p,div);prev.appendChild(div);
+      // Yield to browser every batch to keep UI responsive
+      if(p%BATCH===0) await new Promise(r=>setTimeout(r,0));
+      st.innerText='Merender... '+p+'/'+pdf.numPages+' hal';
+    }
+    st.innerText=pdf.numPages+' halaman siap. Klik untuk memilih.';
+  }catch(e){console.error(e);document.getElementById('splitStatus').innerText='Gagal memuat PDF.';}
+}
 function toggleSplitPage(p,div){if(splitSelected.has(p)){splitSelected.delete(p);div.classList.remove('selected');}else{splitSelected.add(p);div.classList.add('selected');}document.getElementById('btnSplit').disabled=splitSelected.size===0;document.getElementById('splitStatus').innerText=splitSelected.size+' halaman dipilih.';}
-function splitSelectAll(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>{const p=parseInt(d.dataset.page);splitSelected.add(p);d.classList.add('selected');});document.getElementById('btnSplit').disabled=splitSelected.size===0;document.getElementById('splitStatus').innerText=splitSelected.size+' halaman dipilih.';}
+function splitSelectAll(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>{const p=parseInt(d.dataset.page);splitSelected.add(p);d.classList.add('selected');});document.getElementById('btnSplit').disabled=false;document.getElementById('splitStatus').innerText=splitSelected.size+' halaman dipilih.';}
 function splitSelectNone(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>d.classList.remove('selected'));splitSelected.clear();document.getElementById('btnSplit').disabled=true;document.getElementById('splitStatus').innerText='0 halaman dipilih.';}
 async function splitPDF(){const st=document.getElementById('splitStatus');if(!splitFile||splitSelected.size===0)return;st.innerText='Memproses...';try{const idx=[...splitSelected].sort((a,b)=>a-b).map(p=>p-1);const bytes=await splitFile.arrayBuffer(),src=await PDFLib.PDFDocument.load(bytes),out=await PDFLib.PDFDocument.create(),pages=await out.copyPages(src,idx);pages.forEach(p=>out.addPage(p));const bo=await out.save();dlBlob(bo,'Halaman_Terpilih.pdf');st.innerText=idx.length+' halaman diekstrak!';}catch(e){console.error(e);st.innerText='Gagal.';}}
 function dlBlob(bytes,fn){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));a.download=fn;a.click();}
@@ -965,6 +1100,101 @@ function finExportSummary() {
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(Object.entries(expMap).map(([k,v])=>({Kategori:k,Jumlah:v}))),'Pengeluaran');
   XLSX.writeFile(wb,`FinTracker_Summary_${Date.now()}.xlsx`);
 }
+/* ===== TEAM CHAT (Supabase Realtime) ===== */
+// ⚠️ Jalankan SQL ini di Supabase sekali:
+// create table chat_messages (id bigint generated always as identity primary key, user_id uuid references auth.users(id) on delete cascade not null, user_name text not null, message text not null, created_at timestamptz default now());
+// alter table chat_messages enable row level security;
+// create policy "read_chat" on chat_messages for select using (auth.role()='authenticated');
+// create policy "send_chat" on chat_messages for insert with check (auth.uid()=user_id);
+// create policy "delete_own" on chat_messages for delete using (auth.uid()=user_id);
+
+let chatOpen=false, chatUserId=null, chatUserName='', chatMessages=[], chatUnread=0, chatSub=null;
+
+async function chatInit(userId, name){
+  chatUserId=userId; chatUserName=name;
+  // Load last 60 messages
+  const {data}=await sb.from('chat_messages').select('*').order('created_at',{ascending:true}).limit(60);
+  if(data){chatMessages=data;chatRenderMsgs();}
+  // Subscribe to realtime inserts
+  chatSub=sb.channel('public_chat')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{
+      chatMessages.push(payload.new);
+      chatRenderMsgs();
+      if(!chatOpen){chatUnread++;chatUpdateBadge();}
+    }).subscribe();
+  document.getElementById('chatOnline').textContent='● Online';
+}
+
+function toggleChat(){
+  chatOpen=!chatOpen;
+  const panel=document.getElementById('chatPanel');
+  panel.classList.toggle('open',chatOpen);
+  if(chatOpen){
+    chatUnread=0;chatUpdateBadge();
+    setTimeout(()=>{chatScrollBottom();document.getElementById('chatInput')?.focus();},200);
+  }
+}
+
+function chatUpdateBadge(){
+  const b=document.getElementById('chatBadge');
+  if(!b)return;
+  if(chatUnread>0){b.classList.add('show');b.textContent=chatUnread>9?'9+':chatUnread;}
+  else{b.classList.remove('show');}
+}
+
+function chatRenderMsgs(){
+  const el=document.getElementById('chatMsgs');if(!el)return;
+  if(!chatMessages.length){el.innerHTML='<div class="chat-empty-msg">Belum ada pesan. Mulai chat dengan tim!</div>';return;}
+  let html='',lastDate='';
+  chatMessages.forEach(m=>{
+    const isMine=m.user_id===chatUserId;
+    const dt=new Date(m.created_at);
+    const dateStr=dt.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'});
+    const timeStr=dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    if(dateStr!==lastDate){html+=`<div class="chat-day-divider">${dateStr}</div>`;lastDate=dateStr;}
+    const escaped=String(m.message||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const safeName=String(m.user_name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    html+=`<div class="chat-msg ${isMine?'mine':'theirs'}">
+      ${!isMine?`<div class="chat-sender">${safeName}</div>`:''}
+      <div class="chat-bubble">${escaped}</div>
+      <div class="chat-meta">${timeStr}</div>
+    </div>`;
+  });
+  el.innerHTML=html;
+  chatScrollBottom();
+}
+
+function chatScrollBottom(){const el=document.getElementById('chatMsgs');if(el)el.scrollTop=el.scrollHeight;}
+
+async function chatSend(){
+  const input=document.getElementById('chatInput');
+  if(!input)return;
+  const msg=input.value.trim();
+  if(!msg||!chatUserId)return;
+  const btn=document.getElementById('chatSendBtn');
+  input.value='';input.style.height='42px';
+  if(btn)btn.disabled=true;
+  try{
+    await sb.from('chat_messages').insert({user_id:chatUserId,user_name:chatUserName,message:msg});
+  }catch(e){
+    console.error('Chat error:',e);
+    alert('Gagal mengirim pesan.');
+    input.value=msg; // restore on fail
+  }
+  if(btn)btn.disabled=false;
+  input.focus();
+}
+
+function chatKeydown(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}
+}
+
+function chatAutoResize(el){
+  el.style.height='42px';
+  const h=Math.min(el.scrollHeight,100);
+  el.style.height=h+'px';
+}
+
 </script>
 </body>
 </html>
