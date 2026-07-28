@@ -86,6 +86,13 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 .pdf-thumb .pnum{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:11px;text-align:center;padding:3px;font-weight:700}
 .pdf-thumb.selected{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
 .pdf-thumb.selected::after{content:'✓';position:absolute;top:6px;right:6px;width:22px;height:22px;background:var(--primary);color:#04130C;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.pdf-thumb-zoom{position:absolute;top:6px;left:6px;width:24px;height:24px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;opacity:0;transition:.15s}
+.pdf-thumb:hover .pdf-thumb-zoom{opacity:1}
+.pdf-zoom-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px}
+.pdf-zoom-overlay.show{display:flex}
+.pdf-zoom-overlay canvas,.pdf-zoom-overlay img{max-width:92vw;max-height:88vh;border-radius:8px;box-shadow:0 10px 50px rgba(0,0,0,.6);background:#fff}
+.pdf-zoom-close{position:absolute;top:20px;right:24px;width:44px;height:44px;background:rgba(255,255,255,.15);border:none;border-radius:50%;color:#fff;font-size:24px;cursor:pointer}
+.pdf-zoom-close:hover{background:rgba(255,255,255,.28)}
 .pdf-mergefile{border:1px solid var(--border-soft);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--card-2)}
 .pdf-mergefile .mf-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:8px}
 .pdf-mergefile .mf-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
@@ -103,7 +110,7 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 .pdf-merge-pages{font-size:11px;color:var(--text-muted)}
 .pdf-split-filegroup{margin-top:16px}
 .pdf-split-filehead{font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-soft)}
-.pdf-split-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.pdf-split-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
 /* ===== KUR STEP ===== */
 .kur-step{border:1px solid var(--border-soft);border-radius:14px;padding:18px;margin-bottom:16px;background:var(--card-2)}
 .kur-step-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
@@ -157,6 +164,23 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 .chat-user-email{font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-user-badge{min-width:19px;height:19px;padding:0 5px;background:var(--danger);color:#fff;border-radius:10px;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;flex-shrink:0}
 .chat-user-badge.show{display:flex}
+/* Friend system */
+.chat-tabs{display:flex;border-bottom:1px solid var(--border-soft);flex-shrink:0}
+.chat-tab{flex:1;padding:11px 6px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;position:relative}
+.chat-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.chat-tab-badge{display:none;position:absolute;top:5px;margin-left:3px;min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:#fff;border-radius:8px;font-size:9px;align-items:center;justify-content:center}
+.chat-tab-badge.show{display:inline-flex}
+.chat-tabcontent{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.chat-add-box{padding:18px}
+.chat-add-label{font-size:12px;font-weight:700;color:var(--text-muted);margin:0 0 8px}
+.chat-mycode-display{font-size:28px;font-weight:800;letter-spacing:6px;text-align:center;padding:16px;background:var(--card-2);border:2px dashed var(--primary);border-radius:14px;color:var(--primary);cursor:pointer;transition:.15s;font-family:monospace}
+.chat-mycode-display:hover{background:var(--primary-soft)}
+.chat-add-row{display:flex;gap:8px}
+.chat-req-actions{display:flex;gap:6px}
+.chat-req-btn{padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:700;transition:.15s}
+.chat-req-accept{background:var(--primary);color:#04130C}
+.chat-req-reject{background:transparent;border:1px solid var(--border);color:var(--text-muted)}
+.chat-req-accept:hover{background:var(--primary-hover)}.chat-req-reject:hover{border-color:var(--danger);color:var(--danger)}
 /* ===== PDF thumb size fix ===== */
 .pdf-mergefile .mf-thumbs canvas{max-height:90px;object-fit:cover}
 .pdf-thumb canvas{max-height:160px}
@@ -237,16 +261,39 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
   💬<span class="chat-badge" id="chatBadge">0</span>
 </button>
 <div class="chat-panel" id="chatPanel">
-  <!-- VIEW 1: USER LIST -->
+  <!-- VIEW 1: FRIEND LIST with tabs -->
   <div class="chat-view" id="chatViewList">
     <div class="chat-header">
-      <div><h3>💬 Pesan</h3><div class="chat-online">Pilih user untuk chat</div></div>
+      <div><h3>💬 Pesan</h3><div class="chat-online" id="chatMyCode">Kode: ...</div></div>
       <button class="chat-close" onclick="toggleChat()" title="Tutup">✕</button>
     </div>
-    <div class="chat-search-row">
-      <input type="text" class="chat-search" id="chatSearch" placeholder="🔍 Cari user..." oninput="chatFilterUsers(this.value)">
+    <div class="chat-tabs">
+      <button class="chat-tab active" id="chatTabFriends" onclick="chatSwitchTab('friends')">Teman</button>
+      <button class="chat-tab" id="chatTabRequests" onclick="chatSwitchTab('requests')">Permintaan<span class="chat-tab-badge" id="chatReqBadge">0</span></button>
+      <button class="chat-tab" id="chatTabAdd" onclick="chatSwitchTab('add')">+ Tambah</button>
     </div>
-    <div class="chat-userlist" id="chatUserList"><div class="chat-empty-msg">Memuat daftar user...</div></div>
+    <!-- Tab: Friends -->
+    <div class="chat-tabcontent" id="chatTabContentFriends">
+      <div class="chat-userlist" id="chatFriendList"><div class="chat-empty-msg">Memuat teman...</div></div>
+    </div>
+    <!-- Tab: Requests -->
+    <div class="chat-tabcontent" id="chatTabContentRequests" style="display:none;">
+      <div class="chat-userlist" id="chatRequestList"><div class="chat-empty-msg">Tidak ada permintaan.</div></div>
+    </div>
+    <!-- Tab: Add friend -->
+    <div class="chat-tabcontent" id="chatTabContentAdd" style="display:none;">
+      <div class="chat-add-box">
+        <p class="chat-add-label">Kode unik Anda:</p>
+        <div class="chat-mycode-display" id="chatMyCodeBig" onclick="chatCopyCode()">......</div>
+        <p class="card-hint" style="text-align:center;font-size:11px;margin:6px 0 20px;">Klik untuk salin. Bagikan ke teman agar mereka bisa menambah Anda.</p>
+        <p class="chat-add-label">Tambah teman via kode:</p>
+        <div class="chat-add-row">
+          <input type="text" class="chat-search" id="chatAddCode" placeholder="Masukkan kode teman" maxlength="6" style="text-transform:uppercase;">
+          <button class="btn small-btn" onclick="chatSendRequest()">Kirim</button>
+        </div>
+        <p id="chatAddStatus" class="card-hint" style="text-align:center;margin-top:12px;min-height:18px;"></p>
+      </div>
+    </div>
   </div>
 
   <!-- VIEW 2: CONVERSATION -->
@@ -550,6 +597,11 @@ input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;backgroun
 </div>
 </div>
 </div></div>
+<!-- PDF ZOOM OVERLAY -->
+<div class="pdf-zoom-overlay" id="pdfZoomOverlay" onclick="pdfCloseZoom()">
+  <button class="pdf-zoom-close" onclick="pdfCloseZoom()">✕</button>
+  <div id="pdfZoomContent"></div>
+</div>
 
 </div><!-- end main-content -->
 </div><!-- end appLayout -->
@@ -639,7 +691,12 @@ function exportToExcel(tid,fn){let csv=[],rows=document.querySelectorAll('#'+tid
 
 /* ===== INIT ===== */
 let toolsInit=false;
-function initTools(){if(toolsInit)return;toolsInit=true;if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';generateQR();generatePassword();kurAddDefaultRows();kurCalc();initOCR();initVoice();finInit();}
+function initTools(){if(toolsInit)return;toolsInit=true;
+// Setup PDF.js worker BEFORE any PDF operations
+if(typeof pdfjsLib==='undefined'){console.error('pdfjsLib not loaded');return;}
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+generateQR();generatePassword();kurAddDefaultRows();kurCalc();initOCR();initVoice();finInit();
+}
 
 /* ===== LOAN CALCULATOR ===== */
 function hitungAngsuran(){
@@ -754,7 +811,25 @@ function pdfShowMode(mode){
     tab.style.borderRadius='999px';
   });
 }
-async function pdfRenderPage(pdf,pageNum,scale){const page=await pdf.getPage(pageNum),vp=page.getViewport({scale}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;return cv;}
+async function pdfRenderPage(pdf,pageNum,scale){
+  try{
+    const page=await pdf.getPage(pageNum);
+    if(!page)throw new Error('Halaman '+pageNum+' tidak ditemukan');
+    const vp=page.getViewport({scale:scale||0.2});
+    const cv=document.createElement('canvas');
+    cv.width=vp.width;cv.height=vp.height;
+    const ctx=cv.getContext('2d');
+    if(!ctx)throw new Error('Canvas context gagal');
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    return cv;
+  }catch(e){
+    console.error('pdfRenderPage error:',e);
+    // Return blank canvas on error
+    const cv=document.createElement('canvas');cv.width=100;cv.height=140;
+    cv.getContext('2d').fillStyle='#ddd';cv.getContext('2d').fillRect(0,0,100,140);
+    return cv;
+  }
+}
 function dlBlob(bytes,fn){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));a.download=fn;a.click();}
 
 /* --- MERGE with drag-reorder --- */
@@ -832,32 +907,79 @@ async function loadSplitFiles(){
   const prev=document.getElementById('splitPreview'),ls=document.getElementById('splitLoadStatus');
   prev.innerHTML='';document.getElementById('btnSplit').disabled=true;
   document.getElementById('splitActions').style.display='none';
-  if(!splitFiles.length)return;
-  prog.style.display='block';bar.style.width='0%';
-  // Count total pages first
-  let totalPages=0; const pdfs=[];
-  for(const f of splitFiles){const ab=await f.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;pdfs.push(pdf);totalPages+=pdf.numPages;}
-  let done=0;
-  for(let fi=0;fi<splitFiles.length;fi++){
-    const pdf=pdfs[fi];
-    const group=document.createElement('div');group.className='pdf-split-filegroup';
-    group.innerHTML=`<div class="pdf-split-filehead">📄 ${splitFiles[fi].name.replace(/</g,'&lt;')} (${pdf.numPages} hal)</div>`;
-    const grid=document.createElement('div');grid.className='pdf-split-grid';group.appendChild(grid);prev.appendChild(group);
-    for(let p=1;p<=pdf.numPages;p++){
-      const cv=await pdfRenderPage(pdf,p,0.2);
-      const key=fi+':'+p;
-      const div=document.createElement('div');div.className='pdf-thumb';div.dataset.key=key;
-      div.innerHTML='<div class="pnum">'+p+'</div>';div.insertBefore(cv,div.firstChild);
-      div.onclick=()=>toggleSplitPage(key,div);grid.appendChild(div);
-      done++;bar.style.width=Math.round(done/totalPages*100)+'%';
-      ls.innerText='Merender '+done+'/'+totalPages+' halaman...';
-      if(done%4===0)await new Promise(r=>setTimeout(r,0));
+  if(!splitFiles.length){ls.innerText='Pilih minimal 1 file PDF.';return;}
+  prog.style.display='block';bar.style.width='0%';ls.innerText='📖 Membaca file PDF...';
+  try{
+    // 1. Load all PDFs first
+    let totalPages=0; const pdfs=[];
+    for(let fi=0;fi<splitFiles.length;fi++){
+      try{
+        const f=splitFiles[fi];
+        ls.innerText='📖 Membaca file '+(fi+1)+'/'+splitFiles.length+' ('+f.name+')...';
+        const ab=await f.arrayBuffer();
+        if(!pdfjsLib){throw new Error('PDF library belum siap');}
+        const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+        pdfs.push(pdf);
+        totalPages+=pdf.numPages;
+        bar.style.width=Math.round((fi+1)/splitFiles.length*30)+'%';
+      }catch(e){
+        console.error('Error membaca file',fi,e);
+        ls.innerText='❌ Gagal membaca '+splitFiles[fi].name+': '+e.message;
+        prog.style.display='none';
+        return;
+      }
     }
+    // 2. Render all pages
+    let done=0;
+    for(let fi=0;fi<splitFiles.length;fi++){
+      const pdf=pdfs[fi];
+      const group=document.createElement('div');group.className='pdf-split-filegroup';
+      group.innerHTML='<div class="pdf-split-filehead">📄 '+splitFiles[fi].name.replace(/</g,'&lt;')+' ('+pdf.numPages+' hal)</div>';
+      const grid=document.createElement('div');grid.className='pdf-split-grid';group.appendChild(grid);prev.appendChild(group);
+      for(let p=1;p<=pdf.numPages;p++){
+        try{
+          const cv=await pdfRenderPage(pdf,p,0.3);
+          const key=fi+':'+p;
+          const div=document.createElement('div');div.className='pdf-thumb';div.dataset.key=key;
+          const zoomBtn=document.createElement('button');zoomBtn.className='pdf-thumb-zoom';zoomBtn.innerHTML='🔍';zoomBtn.title='Perbesar';
+          zoomBtn.onclick=(ev)=>{ev.stopPropagation();pdfZoomPage(fi,p);};
+          div.innerHTML='<div class="pnum">'+p+'</div>';div.insertBefore(cv,div.firstChild);div.appendChild(zoomBtn);
+          div.onclick=()=>toggleSplitPage(key,div);grid.appendChild(div);
+          done++;bar.style.width=Math.round(30+(done/totalPages*70))+'%';
+          ls.innerText='Merender '+done+'/'+totalPages+' halaman...';
+          if(done%4===0)await new Promise(r=>setTimeout(r,0));
+        }catch(e){
+          console.error('Error render halaman',fi,p,e);
+          // Skip halaman yang error, lanjut
+          const key=fi+':'+p;
+          const div=document.createElement('div');div.className='pdf-thumb' ;div.dataset.key=key;
+          div.innerHTML='<div class="pnum" style="background:#f44336;color:#fff;">Err</div>';grid.appendChild(div);
+          done++;
+        }
+      }
+    }
+    prog.style.display='none';ls.innerText='✅ '+totalPages+' halaman dari '+splitFiles.length+' file siap.';
+    document.getElementById('splitActions').style.display='flex';
+    window._splitPdfs=pdfs;
+  }catch(e){
+    console.error('loadSplitFiles error:',e);
+    ls.innerText='❌ Gagal: '+e.message;
+    prog.style.display='none';
   }
-  prog.style.display='none';ls.innerText=totalPages+' halaman dari '+splitFiles.length+' file siap.';
-  document.getElementById('splitActions').style.display='flex';
-  window._splitPdfs=pdfs; // keep refs
 }
+
+/* Zoom a PDF page to full size */
+async function pdfZoomPage(fileIdx,pageNum){
+  const pdfs=window._splitPdfs;if(!pdfs||!pdfs[fileIdx])return;
+  const overlay=document.getElementById('pdfZoomOverlay'),content=document.getElementById('pdfZoomContent');
+  content.innerHTML='<div style="color:#fff;padding:40px;">Memuat...</div>';
+  overlay.classList.add('show');
+  try{
+    const cv=await pdfRenderPage(pdfs[fileIdx],pageNum,2.0); // high-res
+    content.innerHTML='';content.appendChild(cv);
+  }catch(e){content.innerHTML='<div style="color:#fff;">Gagal memuat halaman.</div>';}
+}
+function pdfCloseZoom(){document.getElementById('pdfZoomOverlay').classList.remove('show');document.getElementById('pdfZoomContent').innerHTML='';}
 function toggleSplitPage(key,div){if(splitSelected.has(key)){splitSelected.delete(key);div.classList.remove('selected');}else{splitSelected.add(key);div.classList.add('selected');}updateSplitCount();}
 function updateSplitCount(){document.getElementById('btnSplit').disabled=splitSelected.size===0;document.getElementById('splitSelCount').innerText=splitSelected.size+' dipilih';}
 function splitSelectAll(){document.querySelectorAll('#splitPreview .pdf-thumb').forEach(d=>{splitSelected.add(d.dataset.key);d.classList.add('selected');});updateSplitCount();}
@@ -1276,14 +1398,14 @@ function finExportSummary() {
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(Object.entries(expMap).map(([k,v])=>({Kategori:k,Jumlah:v}))),'Pengeluaran');
   XLSX.writeFile(wb,`FinTracker_Summary_${Date.now()}.xlsx`);
 }
-/* ===== PRIVATE 1-ON-1 CHAT (Supabase Realtime) ===== */
+/* ===== CHAT WITH FRIEND SYSTEM (Supabase Realtime) ===== */
 /* ⚠️ Jalankan SQL ini di Supabase SQL Editor sekali:
 
--- 1. Tabel profiles (semua user terdaftar)
+-- 1. profiles: tambah kolom friend_code
 create table profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  full_name text,
-  email text,
+  full_name text, email text,
+  friend_code text unique,
   updated_at timestamptz default now()
 );
 alter table profiles enable row level security;
@@ -1291,132 +1413,149 @@ create policy "read_all_profiles" on profiles for select using (auth.role()='aut
 create policy "upsert_own_profile" on profiles for insert with check (auth.uid()=id);
 create policy "update_own_profile" on profiles for update using (auth.uid()=id);
 
--- 2. Tabel direct messages
+-- 2. friend_requests
+create table friend_requests (
+  id bigint generated always as identity primary key,
+  from_id uuid references auth.users(id) on delete cascade not null,
+  to_id uuid references auth.users(id) on delete cascade not null,
+  from_name text, from_code text,
+  status text default 'pending',
+  created_at timestamptz default now(),
+  unique(from_id,to_id)
+);
+alter table friend_requests enable row level security;
+create policy "see_my_requests" on friend_requests for select using (auth.uid()=from_id or auth.uid()=to_id);
+create policy "send_request" on friend_requests for insert with check (auth.uid()=from_id);
+create policy "update_request" on friend_requests for update using (auth.uid()=to_id or auth.uid()=from_id);
+create policy "delete_request" on friend_requests for delete using (auth.uid()=to_id or auth.uid()=from_id);
+
+-- 3. friendships (dua baris per pertemanan, satu tiap arah)
+create table friendships (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  friend_id uuid references auth.users(id) on delete cascade not null,
+  friend_name text, friend_email text,
+  created_at timestamptz default now(),
+  unique(user_id,friend_id)
+);
+alter table friendships enable row level security;
+create policy "see_my_friends" on friendships for select using (auth.uid()=user_id);
+create policy "add_friendship" on friendships for insert with check (auth.uid()=user_id or auth.uid()=friend_id);
+
+-- 4. direct_messages (sama seperti sebelumnya)
 create table direct_messages (
   id bigint generated always as identity primary key,
   sender_id uuid references auth.users(id) on delete cascade not null,
   receiver_id uuid references auth.users(id) on delete cascade not null,
-  sender_name text not null,
-  message text not null,
-  is_read boolean default false,
-  created_at timestamptz default now()
+  sender_name text not null, message text not null,
+  is_read boolean default false, created_at timestamptz default now()
 );
 alter table direct_messages enable row level security;
 create policy "read_own_dm" on direct_messages for select using (auth.uid()=sender_id or auth.uid()=receiver_id);
 create policy "send_dm" on direct_messages for insert with check (auth.uid()=sender_id);
 create policy "update_read" on direct_messages for update using (auth.uid()=receiver_id);
 
--- 3. Aktifkan Realtime: Supabase Dashboard > Database > Replication > centang direct_messages
+-- Aktifkan Realtime untuk: direct_messages, friend_requests, friendships
 */
 
-let chatOpen=false, chatMyId=null, chatMyName='', chatPeerId=null, chatPeerName='';
-let chatUsers=[], chatMessages=[], chatUnreadByUser={}, chatSub=null, chatInited=false, chatPollTimer=null;
+let chatOpen=false, chatMyId=null, chatMyName='', chatMyCode='', chatMyEmail='';
+let chatFriends=[], chatRequests=[], chatMessages=[], chatUnreadByUser={};
+let chatPeerId=null, chatPeerName='', chatSub=null, chatInited=false, chatPollTimer=null, chatActiveTab='friends';
+
+// Generate 6-char code from user id (deterministic)
+function chatGenCode(uid){
+  let hash=0;for(let i=0;i<uid.length;i++){hash=((hash<<5)-hash+uid.charCodeAt(i))|0;}
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='',n=Math.abs(hash);
+  for(let i=0;i<6;i++){code+=chars[n%chars.length];n=Math.floor(n/chars.length)+((i+1)*7);}
+  return code;
+}
 
 async function chatInit(userId, name){
   if(chatInited) return;
   chatInited=true;
   chatMyId=userId; chatMyName=name;
-
-  // 1. Upsert own profile so others can find me
   const {data:{session}}=await sb.auth.getSession();
-  const email=session?.user?.email||'';
+  chatMyEmail=session?.user?.email||'';
+  chatMyCode=chatGenCode(userId);
+
+  // Upsert profile with friend code
   try{
     await sb.from('profiles').upsert(
-      {id:userId,full_name:name,email:email,updated_at:new Date().toISOString()},
-      {onConflict:'id'}
-    );
+      {id:userId,full_name:name,email:chatMyEmail,friend_code:chatMyCode,updated_at:new Date().toISOString()},
+      {onConflict:'id'});
   }catch(e){console.error('profile upsert:',e);}
 
-  // 2. Load all users
-  await chatLoadUsers();
+  // Show my code
+  const cd=document.getElementById('chatMyCode');if(cd)cd.textContent='Kode: '+chatMyCode;
+  const cb=document.getElementById('chatMyCodeBig');if(cb)cb.textContent=chatMyCode;
 
-  // 3. Load unread counts
+  await chatLoadFriends();
+  await chatLoadRequests();
   await chatLoadUnread();
 
-  // 4. Subscribe to ALL direct_messages changes (realtime), filter client-side
-  chatSub=sb.channel('dm_realtime_'+userId)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages'},payload=>{
-      chatHandleIncoming(payload.new);
-    })
-    .subscribe((status)=>{
-      console.log('Chat realtime status:',status);
+  // Realtime: messages + requests + friendships
+  chatSub=sb.channel('chat_all_'+userId)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages'},p=>chatHandleIncoming(p.new))
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'friend_requests',filter:'to_id=eq.'+userId},()=>{chatLoadRequests();chatBeep();})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'friendships',filter:'user_id=eq.'+userId},()=>chatLoadFriends())
+    .subscribe(s=>console.log('Chat realtime:',s));
+
+  if(chatPollTimer)clearInterval(chatPollTimer);
+  chatPollTimer=setInterval(()=>{chatPoll();chatLoadRequests();},5000);
+}
+
+/* ---------- NOTIFICATION SOUND (WhatsApp-like two-tone) ---------- */
+let chatAudioCtx=null;
+function chatBeep(){
+  try{
+    if(!chatAudioCtx)chatAudioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const ctx=chatAudioCtx,now=ctx.currentTime;
+    // Two ascending tones
+    [{f:660,t:0},{f:880,t:0.13}].forEach(({f,t})=>{
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.type='sine';osc.frequency.value=f;
+      osc.connect(gain);gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0,now+t);
+      gain.gain.linearRampToValueAtTime(0.25,now+t+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+t+0.16);
+      osc.start(now+t);osc.stop(now+t+0.17);
     });
-
-  // 5. Polling fallback (every 4s) in case realtime is not enabled in Supabase
-  if(chatPollTimer) clearInterval(chatPollTimer);
-  chatPollTimer=setInterval(chatPoll, 4000);
+  }catch(e){/* audio blocked until user interacts */}
 }
 
-// Central handler for any new message (from realtime OR polling)
-function chatHandleIncoming(m){
-  if(!m) return;
-  const involvesMe = (m.receiver_id===chatMyId || m.sender_id===chatMyId);
-  if(!involvesMe) return;
-  // Avoid duplicates (optimistic or already loaded)
-  if(chatMessages.some(x=>String(x.id)===String(m.id))) return;
-
-  const peerOfMsg = m.sender_id===chatMyId ? m.receiver_id : m.sender_id;
-
-  // If this message belongs to the currently-open conversation → append live
-  if(chatPeerId && peerOfMsg===chatPeerId){
-    chatMessages.push(m);
-    chatRenderMsgs();
-    // If I'm the receiver, mark as read since chat is open
-    if(m.receiver_id===chatMyId) chatMarkRead(chatPeerId);
-  } else if(m.receiver_id===chatMyId){
-    // Incoming to me but different/closed conversation → bump unread
-    chatUnreadByUser[m.sender_id]=(chatUnreadByUser[m.sender_id]||0)+1;
-    chatUpdateTotalBadge();
-    chatRenderUsers(document.getElementById('chatSearch')?.value||'');
-  }
+/* ---------- TABS ---------- */
+function chatSwitchTab(tab){
+  chatActiveTab=tab;
+  ['friends','requests','add'].forEach(t=>{
+    document.getElementById('chatTabContent'+t.charAt(0).toUpperCase()+t.slice(1)).style.display=(t===tab)?'flex':'none';
+    document.getElementById('chatTab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active',t===tab);
+  });
+  if(tab==='requests')chatLoadRequests();
+  if(tab==='friends')chatLoadFriends();
 }
 
-// Polling fallback: fetch recent messages involving me
-let chatLastPollTime=null;
-async function chatPoll(){
-  if(!chatMyId) return;
+/* ---------- FRIENDS ---------- */
+async function chatLoadFriends(){
   try{
-    let q=sb.from('direct_messages').select('*')
-      .or(`sender_id.eq.${chatMyId},receiver_id.eq.${chatMyId}`)
-      .order('created_at',{ascending:true}).limit(30);
-    const {data}=await q;
-    if(data) data.forEach(m=>chatHandleIncoming(m));
-  }catch(e){/* silent */}
-}
-
-async function chatLoadUsers(){
-  try{
-    const {data,error}=await sb.from('profiles').select('*').neq('id',chatMyId).order('full_name');
+    const {data,error}=await sb.from('friendships').select('*').eq('user_id',chatMyId).order('friend_name');
     if(error)throw error;
-    chatUsers=data||[];
-    chatRenderUsers();
+    chatFriends=data||[];
+    chatRenderFriends();
   }catch(e){
-    console.error('load users:',e);
-    document.getElementById('chatUserList').innerHTML='<div class="chat-empty-msg">Gagal memuat user. Pastikan tabel profiles sudah dibuat di Supabase.</div>';
+    console.error('load friends:',e);
+    const el=document.getElementById('chatFriendList');
+    if(el)el.innerHTML='<div class="chat-empty-msg">Gagal memuat teman. Pastikan tabel sudah dibuat di Supabase.</div>';
   }
 }
-
-async function chatLoadUnread(){
-  try{
-    const {data}=await sb.from('direct_messages').select('sender_id').eq('receiver_id',chatMyId).eq('is_read',false);
-    chatUnreadByUser={};
-    (data||[]).forEach(m=>{chatUnreadByUser[m.sender_id]=(chatUnreadByUser[m.sender_id]||0)+1;});
-    chatUpdateTotalBadge();
-    chatRenderUsers();
-  }catch(e){console.error('load unread:',e);}
-}
-
-function chatRenderUsers(filter=''){
-  const el=document.getElementById('chatUserList');if(!el)return;
-  let users=chatUsers;
-  if(filter){const f=filter.toLowerCase();users=users.filter(u=>(u.full_name||'').toLowerCase().includes(f)||(u.email||'').toLowerCase().includes(f));}
-  if(!users.length){el.innerHTML='<div class="chat-empty-msg">'+(chatUsers.length?'User tidak ditemukan.':'Belum ada user lain terdaftar.')+'</div>';return;}
-  el.innerHTML=users.map(u=>{
-    const initial=(u.full_name||u.email||'?').charAt(0).toUpperCase();
-    const unread=chatUnreadByUser[u.id]||0;
-    const safeName=chatEsc(u.full_name||'Tanpa Nama');
-    const safeEmail=chatEsc(u.email||'');
-    return `<div class="chat-user" onclick="chatOpenConvo('${u.id}','${safeName.replace(/'/g,"")}','${safeEmail.replace(/'/g,"")}')">
+function chatRenderFriends(){
+  const el=document.getElementById('chatFriendList');if(!el)return;
+  if(!chatFriends.length){el.innerHTML='<div class="chat-empty-msg">Belum ada teman.<br>Buka tab <strong>+ Tambah</strong> untuk mengundang teman via kode.</div>';return;}
+  el.innerHTML=chatFriends.map(f=>{
+    const initial=(f.friend_name||'?').charAt(0).toUpperCase();
+    const unread=chatUnreadByUser[f.friend_id]||0;
+    const safeName=chatEsc(f.friend_name||'Teman');
+    const safeEmail=chatEsc(f.friend_email||'');
+    return `<div class="chat-user" onclick="chatOpenConvo('${f.friend_id}','${safeName.replace(/'/g,'')}','${safeEmail.replace(/'/g,'')}')">
       <div class="chat-user-avatar">${initial}</div>
       <div class="chat-user-info"><div class="chat-user-name">${safeName}</div><div class="chat-user-email">${safeEmail}</div></div>
       <div class="chat-user-badge ${unread>0?'show':''}">${unread>9?'9+':unread}</div>
@@ -1424,67 +1563,178 @@ function chatRenderUsers(filter=''){
   }).join('');
 }
 
-function chatFilterUsers(v){chatRenderUsers(v);}
+/* ---------- FRIEND REQUESTS ---------- */
+async function chatLoadRequests(){
+  try{
+    const {data,error}=await sb.from('friend_requests').select('*').eq('to_id',chatMyId).eq('status','pending').order('created_at',{ascending:false});
+    if(error)throw error;
+    chatRequests=data||[];
+    chatRenderRequests();
+    // Update badge
+    const badge=document.getElementById('chatReqBadge');
+    if(badge){if(chatRequests.length>0){badge.classList.add('show');badge.textContent=chatRequests.length;}else badge.classList.remove('show');}
+    chatUpdateTotalBadge();
+  }catch(e){console.error('load requests:',e);}
+}
+function chatRenderRequests(){
+  const el=document.getElementById('chatRequestList');if(!el)return;
+  if(!chatRequests.length){el.innerHTML='<div class="chat-empty-msg">Tidak ada permintaan pertemanan.</div>';return;}
+  el.innerHTML=chatRequests.map(r=>{
+    const initial=(r.from_name||'?').charAt(0).toUpperCase();
+    const safeName=chatEsc(r.from_name||'User');
+    return `<div class="chat-user" style="cursor:default;">
+      <div class="chat-user-avatar">${initial}</div>
+      <div class="chat-user-info"><div class="chat-user-name">${safeName}</div><div class="chat-user-email">Kode: ${chatEsc(r.from_code||'')}</div></div>
+      <div class="chat-req-actions">
+        <button class="chat-req-btn chat-req-accept" onclick="chatAcceptRequest(${r.id},'${r.from_id}','${safeName.replace(/'/g,'')}')">✓</button>
+        <button class="chat-req-btn chat-req-reject" onclick="chatRejectRequest(${r.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function chatSendRequest(){
+  const input=document.getElementById('chatAddCode'),st=document.getElementById('chatAddStatus');
+  const code=(input.value||'').trim().toUpperCase();
+  if(code.length!==6){st.innerText='Kode harus 6 karakter.';return;}
+  if(code===chatMyCode){st.innerText='Itu kode Anda sendiri 😅';return;}
+  st.innerText='Mencari user...';
+  try{
+    // Find user by code
+    const {data:users,error}=await sb.from('profiles').select('*').eq('friend_code',code).limit(1);
+    if(error)throw error;
+    if(!users||!users.length){st.innerText='❌ Kode tidak ditemukan.';return;}
+    const target=users[0];
+    // Check already friends
+    if(chatFriends.some(f=>f.friend_id===target.id)){st.innerText='Sudah berteman dengan '+target.full_name+'.';return;}
+    // Send request
+    const {error:reqErr}=await sb.from('friend_requests').insert({
+      from_id:chatMyId,to_id:target.id,from_name:chatMyName,from_code:chatMyCode,status:'pending'
+    });
+    if(reqErr){
+      if(reqErr.code==='23505'){st.innerText='Permintaan sudah dikirim sebelumnya.';return;}
+      throw reqErr;
+    }
+    st.innerText='✅ Permintaan terkirim ke '+chatEsc(target.full_name)+'!';
+    input.value='';
+  }catch(e){console.error('send request:',e);st.innerText='❌ Gagal: '+(e.message||'');}
+}
+
+async function chatAcceptRequest(reqId, fromId, fromName){
+  try{
+    // Get requester profile for email
+    const {data:prof}=await sb.from('profiles').select('*').eq('id',fromId).single();
+    const fromEmail=prof?.email||'';
+    // Create BOTH friendship rows
+    await sb.from('friendships').insert([
+      {user_id:chatMyId,friend_id:fromId,friend_name:fromName,friend_email:fromEmail},
+      {user_id:fromId,friend_id:chatMyId,friend_name:chatMyName,friend_email:chatMyEmail}
+    ]);
+    // Update request status
+    await sb.from('friend_requests').update({status:'accepted'}).eq('id',reqId);
+    await chatLoadRequests();
+    await chatLoadFriends();
+    chatSwitchTab('friends');
+  }catch(e){console.error('accept:',e);alert('Gagal menerima: '+e.message);}
+}
+
+async function chatRejectRequest(reqId){
+  try{
+    await sb.from('friend_requests').update({status:'rejected'}).eq('id',reqId);
+    await chatLoadRequests();
+  }catch(e){console.error('reject:',e);}
+}
+
+function chatCopyCode(){
+  navigator.clipboard?.writeText(chatMyCode).then(()=>{
+    const el=document.getElementById('chatMyCodeBig');const orig=el.textContent;
+    el.textContent='Tersalin!';setTimeout(()=>el.textContent=orig,1000);
+  });
+}
+
+/* ---------- MESSAGES ---------- */
+function chatHandleIncoming(m){
+  if(!m)return;
+  const involvesMe=(m.receiver_id===chatMyId||m.sender_id===chatMyId);
+  if(!involvesMe)return;
+  if(chatMessages.some(x=>String(x.id)===String(m.id)))return;
+  const peerOfMsg=m.sender_id===chatMyId?m.receiver_id:m.sender_id;
+  // Only handle messages from friends
+  const isFriend=chatFriends.some(f=>f.friend_id===peerOfMsg);
+  if(!isFriend && m.receiver_id===chatMyId){
+    // message from non-friend, ignore for badge (shouldn't happen normally)
+    return;
+  }
+  if(chatPeerId && peerOfMsg===chatPeerId){
+    chatMessages.push(m);chatRenderMsgs();
+    if(m.receiver_id===chatMyId){chatMarkRead(chatPeerId);chatBeep();}
+  }else if(m.receiver_id===chatMyId){
+    chatUnreadByUser[m.sender_id]=(chatUnreadByUser[m.sender_id]||0)+1;
+    chatUpdateTotalBadge();chatRenderFriends();chatBeep();
+  }
+}
+
+async function chatPoll(){
+  if(!chatMyId)return;
+  try{
+    const {data}=await sb.from('direct_messages').select('*')
+      .or(`sender_id.eq.${chatMyId},receiver_id.eq.${chatMyId}`)
+      .order('created_at',{ascending:true}).limit(30);
+    if(data)data.forEach(m=>chatHandleIncoming(m));
+  }catch(e){}
+}
+
+async function chatLoadUnread(){
+  try{
+    const {data}=await sb.from('direct_messages').select('sender_id').eq('receiver_id',chatMyId).eq('is_read',false);
+    chatUnreadByUser={};
+    (data||[]).forEach(m=>{chatUnreadByUser[m.sender_id]=(chatUnreadByUser[m.sender_id]||0)+1;});
+    chatUpdateTotalBadge();chatRenderFriends();
+  }catch(e){console.error('load unread:',e);}
+}
 
 function chatUpdateTotalBadge(){
-  const total=Object.values(chatUnreadByUser).reduce((a,b)=>a+b,0);
-  const b=document.getElementById('chatBadge');
-  if(!b)return;
+  const msgTotal=Object.values(chatUnreadByUser).reduce((a,b)=>a+b,0);
+  const reqTotal=chatRequests.length;
+  const total=msgTotal+reqTotal;
+  const b=document.getElementById('chatBadge');if(!b)return;
   if(total>0){b.classList.add('show');b.textContent=total>9?'9+':total;}
   else b.classList.remove('show');
 }
 
 async function chatOpenConvo(peerId,peerName,peerEmail){
-  chatPeerId=peerId; chatPeerName=peerName;
+  chatPeerId=peerId;chatPeerName=peerName;
   document.getElementById('chatPeerName').textContent=peerName;
   document.getElementById('chatPeerEmail').textContent=peerEmail;
   document.getElementById('chatViewList').style.display='none';
   document.getElementById('chatViewConvo').style.display='flex';
   document.getElementById('chatMsgs').innerHTML='<div class="chat-empty-msg">Memuat pesan...</div>';
-  // Load conversation between me and peer
   try{
     const {data,error}=await sb.from('direct_messages').select('*')
       .or(`and(sender_id.eq.${chatMyId},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${chatMyId})`)
       .order('created_at',{ascending:true}).limit(200);
     if(error)throw error;
-    chatMessages=data||[];
-    chatRenderMsgs();
-    chatMarkRead(peerId);
-  }catch(e){
-    console.error('load convo:',e);
-    document.getElementById('chatMsgs').innerHTML='<div class="chat-empty-msg">Gagal memuat pesan.</div>';
-  }
+    chatMessages=data||[];chatRenderMsgs();chatMarkRead(peerId);
+  }catch(e){console.error('load convo:',e);document.getElementById('chatMsgs').innerHTML='<div class="chat-empty-msg">Gagal memuat pesan.</div>';}
   setTimeout(()=>document.getElementById('chatInput')?.focus(),100);
 }
 
 async function chatMarkRead(peerId){
-  // Clear unread badge locally
-  if(chatUnreadByUser[peerId]){delete chatUnreadByUser[peerId];chatUpdateTotalBadge();chatRenderUsers();}
-  try{
-    await sb.from('direct_messages').update({is_read:true})
-      .eq('receiver_id',chatMyId).eq('sender_id',peerId).eq('is_read',false);
-  }catch(e){console.error('mark read:',e);}
+  if(chatUnreadByUser[peerId]){delete chatUnreadByUser[peerId];chatUpdateTotalBadge();chatRenderFriends();}
+  try{await sb.from('direct_messages').update({is_read:true}).eq('receiver_id',chatMyId).eq('sender_id',peerId).eq('is_read',false);}catch(e){}
 }
 
-function chatBackToList(){
-  chatPeerId=null;chatPeerName='';
-  document.getElementById('chatViewConvo').style.display='none';
-  document.getElementById('chatViewList').style.display='flex';
-  chatLoadUnread();
-}
+function chatBackToList(){chatPeerId=null;chatPeerName='';document.getElementById('chatViewConvo').style.display='none';document.getElementById('chatViewList').style.display='flex';chatLoadUnread();chatLoadRequests();}
 
 function toggleChat(){
   chatOpen=!chatOpen;
   document.getElementById('chatPanel').classList.toggle('open',chatOpen);
   if(chatOpen){
-    // Always start on user list
-    if(!chatPeerId) chatBackToListSilent();
-    chatLoadUsers();chatLoadUnread();
+    // resume audio context on user gesture
+    if(chatAudioCtx&&chatAudioCtx.state==='suspended')chatAudioCtx.resume();
+    if(!chatPeerId){document.getElementById('chatViewConvo').style.display='none';document.getElementById('chatViewList').style.display='flex';}
+    chatLoadFriends();chatLoadRequests();chatLoadUnread();
   }
-}
-function chatBackToListSilent(){
-  document.getElementById('chatViewConvo').style.display='none';
-  document.getElementById('chatViewList').style.display='flex';
 }
 
 function chatEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -1501,45 +1751,33 @@ function chatRenderMsgs(){
     if(dateStr!==lastDate){html+=`<div class="chat-day-divider">${dateStr}</div>`;lastDate=dateStr;}
     html+=`<div class="chat-msg ${isMine?'mine':'theirs'}"><div class="chat-bubble">${chatEsc(m.message)}</div><div class="chat-meta">${timeStr}</div></div>`;
   });
-  el.innerHTML=html;
-  chatScrollBottom();
+  el.innerHTML=html;chatScrollBottom();
 }
-
 function chatScrollBottom(){const el=document.getElementById('chatMsgs');if(el)el.scrollTop=el.scrollHeight;}
 
 async function chatSend(){
   const input=document.getElementById('chatInput');
   if(!input||!chatPeerId)return;
-  const msg=input.value.trim();
-  if(!msg)return;
+  const msg=input.value.trim();if(!msg)return;
   const btn=document.getElementById('chatSendBtn');
-  input.value='';input.style.height='42px';
-  if(btn)btn.disabled=true;
-  // Optimistic UI: show immediately
+  input.value='';input.style.height='42px';if(btn)btn.disabled=true;
   const optimistic={id:'tmp_'+Date.now(),sender_id:chatMyId,receiver_id:chatPeerId,sender_name:chatMyName,message:msg,created_at:new Date().toISOString()};
   chatMessages.push(optimistic);chatRenderMsgs();
   try{
-    const {data,error}=await sb.from('direct_messages').insert(
-      {sender_id:chatMyId,receiver_id:chatPeerId,sender_name:chatMyName,message:msg}
-    ).select().single();
+    const {data,error}=await sb.from('direct_messages').insert({sender_id:chatMyId,receiver_id:chatPeerId,sender_name:chatMyName,message:msg}).select().single();
     if(error)throw error;
-    // Replace optimistic with real record
     const idx=chatMessages.findIndex(x=>x.id===optimistic.id);
-    if(idx>=0 && data){chatMessages[idx]=data;chatRenderMsgs();}
+    if(idx>=0&&data){chatMessages[idx]=data;chatRenderMsgs();}
   }catch(e){
     console.error('send dm:',e);
-    // Remove optimistic on failure
-    chatMessages=chatMessages.filter(x=>x.id!==optimistic.id);
-    chatRenderMsgs();
-    alert('Gagal mengirim pesan. Pastikan tabel direct_messages sudah dibuat.');
-    input.value=msg;
+    chatMessages=chatMessages.filter(x=>x.id!==optimistic.id);chatRenderMsgs();
+    alert('Gagal mengirim pesan.');input.value=msg;
   }
-  if(btn)btn.disabled=false;
-  input.focus();
+  if(btn)btn.disabled=false;input.focus();
 }
-
 function chatKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}}
 function chatAutoResize(el){el.style.height='42px';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+
 
 </script>
 </body>
